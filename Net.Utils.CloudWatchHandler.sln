@@ -7,6 +7,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{BE86896B-723
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net.Utils.CloudWatchHandler", "src\Net.Utils.CloudWatchHandler\Net.Utils.CloudWatchHandler.csproj", "{C21A1A66-F02C-40C5-89F4-9EF90E323114}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{E9414CF1-A5A2-448D-ABBA-C89FF6B1447F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Net.Utils.CloudWatchHandler.Tests", "tests\Net.Utils.CloudWatchHandler.Tests\Net.Utils.CloudWatchHandler.Tests.csproj", "{0EA793EB-847A-4639-A5B6-4B73E5228809}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,12 +21,17 @@ Global
 		{C21A1A66-F02C-40C5-89F4-9EF90E323114}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C21A1A66-F02C-40C5-89F4-9EF90E323114}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C21A1A66-F02C-40C5-89F4-9EF90E323114}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0EA793EB-847A-4639-A5B6-4B73E5228809}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0EA793EB-847A-4639-A5B6-4B73E5228809}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0EA793EB-847A-4639-A5B6-4B73E5228809}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0EA793EB-847A-4639-A5B6-4B73E5228809}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C21A1A66-F02C-40C5-89F4-9EF90E323114} = {BE86896B-7239-45DA-AF5D-ABC275D76FF9}
+		{0EA793EB-847A-4639-A5B6-4B73E5228809} = {E9414CF1-A5A2-448D-ABBA-C89FF6B1447F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B4260EE3-8648-4F15-90D4-754078A33A6A}
