@@ -5,7 +5,7 @@ namespace Net.Utils.CloudWatchHandler.Utilities;
 
 public class MessageFormatter
 {
-    public static string FormatExceptionMessage(ExceptionData exceptionData)
+    public static string FormatExceptionMessage(ExceptionData? exceptionData)
     {
         if (exceptionData == null)
         {

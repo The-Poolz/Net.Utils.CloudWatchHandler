@@ -1,7 +1,9 @@
 ﻿using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
 using Moq;
+using Net.Utils.CloudWatchHandler.Models;
 using Net.Utils.CloudWatchHandler.Services;
+using Net.Utils.CloudWatchHandler.Utilities;
 using Xunit;
 
 namespace Net.Utils.CloudWatchHandler.Tests.Services;
@@ -15,8 +17,16 @@ public class LoggingServiceTests
     [Fact]
     public async Task LogMessageAsync_ShouldLogFormattedMessage()
     {
-        const string testMessage = "TestMessage";
-        var expectedFormattedMessage = "{\"ExceptionType\":\"DownloaderException\",\"Application\":\"LambdaSet\",\"ExceptionMessage\":\"TestMessage\",\"Time\":\"" + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") + "\"}";
+        var exceptionData = new ExceptionData
+        {
+            LogLevel = LogLevel.Error,
+            ExceptionType = "DownloaderException",
+            ApplicationName = "LambdaSet",
+            ExceptionMessage = "TestMessage",
+            Time = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")
+        };
+
+        var expectedFormattedMessage = MessageFormatter.FormatExceptionMessage(exceptionData);
 
         _mockLogStreamService.Setup(x => x.CreateLogStreamAsync())
             .ReturnsAsync("TestLogStream");
@@ -26,8 +36,10 @@ public class LoggingServiceTests
 
         var service = new LoggingService(_mockClient.Object, TestLogGroupName, _mockLogStreamService.Object);
 
-        await service.LogMessageAsync(testMessage);
+        // Act
+        await service.LogMessageAsync(exceptionData);
 
+        // Assert
         _mockClient.Verify(x => x.PutLogEventsAsync(It.Is<PutLogEventsRequest>(r => r.LogEvents[0].Message == expectedFormattedMessage), default), Times.Once);
     }
 }
