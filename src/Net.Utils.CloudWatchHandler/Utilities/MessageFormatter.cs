@@ -1,23 +1,23 @@
-﻿using System.Text.Json;
+﻿using Net.Utils.CloudWatchHandler.Models;
+using System.Text.Json;
 
 namespace Net.Utils.CloudWatchHandler.Utilities;
 
 public class MessageFormatter
 {
-    public static string FormatExceptionMessage(string message, string exceptionType = "DownloaderException", string applicationName = "LambdaSet")
+    public static string FormatExceptionMessage(ExceptionData? exceptionData)
     {
-        if (string.IsNullOrWhiteSpace(message))
+        if (exceptionData == null)
         {
-            throw new ArgumentNullException(nameof(message));
+            throw new ArgumentNullException(nameof(exceptionData));
         }
 
-        var exceptionData = new
+        if (string.IsNullOrWhiteSpace(exceptionData.ExceptionMessage))
         {
-            ExceptionType = exceptionType,
-            Application = applicationName,
-            ExceptionMessage = message,
-            Time = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")
-        };
+            throw new ArgumentNullException(nameof(exceptionData.ExceptionMessage));
+        }
+
+        exceptionData.Time = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
 
         return JsonSerializer.Serialize(exceptionData);
     }

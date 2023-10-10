@@ -26,10 +26,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Utilities\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\src\Net.Utils.CloudWatchHandler\Net.Utils.CloudWatchHandler.csproj" />
   </ItemGroup>
 

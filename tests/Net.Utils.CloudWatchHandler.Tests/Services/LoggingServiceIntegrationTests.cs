@@ -1,6 +1,7 @@
 ﻿using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
 using Moq;
+using Net.Utils.CloudWatchHandler.Models;
 using Net.Utils.CloudWatchHandler.Services;
 using Xunit;
 
@@ -44,8 +45,8 @@ public class LoggingServiceIntegrationTests : IDisposable
     public async Task LogMessageAsync_ShouldLogToCloudWatch()
     {
         const string testMessage = "IntegrationTestMessage";
-
-        await _loggingService.LogMessageAsync(testMessage);
+        var testExceptionData = new ExceptionData { ExceptionMessage = testMessage };
+        await _loggingService.LogMessageAsync(testExceptionData);
 
         // Get logs to verify
         var logEvents = await _cloudWatchClient.GetLogEventsAsync(new GetLogEventsRequest

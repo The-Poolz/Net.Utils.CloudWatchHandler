@@ -1,6 +1,7 @@
 ﻿using Amazon.CloudWatchLogs.Model;
 using Amazon.CloudWatchLogs;
 using Net.Utils.CloudWatchHandler.Utilities;
+using Net.Utils.CloudWatchHandler.Models;
 
 namespace Net.Utils.CloudWatchHandler.Services;
 
@@ -18,9 +19,9 @@ public class LoggingService
         _logStreamService = logStreamService ?? throw new ArgumentNullException(nameof(logStreamService));
     }
 
-    public async Task LogMessageAsync(string message)
+    public async Task LogMessageAsync(ExceptionData? exceptionData)
     {
-        var formattedMessage = MessageFormatter.FormatExceptionMessage(message);
+        var formattedMessage = MessageFormatter.FormatExceptionMessage(exceptionData);
 
         var logEvent = new InputLogEvent
         {
@@ -44,7 +45,7 @@ public class LoggingService
         catch (InvalidSequenceTokenException ex)
         {
             _sequenceToken = ex.ExpectedSequenceToken;
-            await LogMessageAsync(message);
+            await LogMessageAsync(exceptionData);
         }
     }
 }
