@@ -44,7 +44,7 @@ public class LoggingService
         catch (InvalidSequenceTokenException ex)
         {
             _sequenceToken = ex.ExpectedSequenceToken;
-            await LogMessageAsync(message); // Retry
+            await LogMessageAsync(message);
         }
     }
 }

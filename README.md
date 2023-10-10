@@ -15,14 +15,14 @@ To install via NuGet:
 
 ```bash
 Install-Package Net.Utils.CloudWatchHandler
+```
 
-
-### 3. **Usage**:
+## Usage
 How to use your library/package. Include basic code examples.
 
 ```markdown
 ## Usage
-
+```
 ```csharp
 using Net.Utils.CloudWatchHandler;
 
@@ -33,28 +33,30 @@ var loggingService = new LoggingService(client, LogGroupName, logStreamService);
 // Create a new log stream and log a message
 var LogStreamName = await logStreamService.CreateLogStreamAsync();
 await loggingService.LogMessageAsync("Your Message", LogStreamName);
+```
 
-
-### 4. **Features**:
+## Features
 List the main features of your library/package.
 
 ```markdown
 ## Features
-
+```
 - Easily create and manage AWS CloudWatch log streams.
 - Simplified logging service to send messages to CloudWatch.
 - Customizable message formatter utility.
 
+```markdown
 ## Contribution
-
+```
 Contributions are welcome! Please create a pull request in the [GitHub repository](https://github.com/The-Poolz/Net.Utils.CloudWatchHandler/tree/master).
 
+```markdown
 ## License
-
+```
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Authors
-CloudWatch Handler
-
+```markdown
+## Tests 
+```
 [![CodeFactor](https://www.codefactor.io/repository/github/the-poolz/net.utils.cloudwatchhandler/badge)](https://www.codefactor.io/repository/github/the-poolz/net.utils.cloudwatchhandler)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=The-Poolz_Net.Utils.CloudWatchHandler&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=The-Poolz_Net.Utils.CloudWatchHandler)
