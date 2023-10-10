@@ -67,6 +67,5 @@ public class LoggingServiceTests
 
         await act.Should().NotThrowAsync();
         _mockClient.Verify(x => x.PutLogEventsAsync(It.IsAny<PutLogEventsRequest>(), default), Times.Exactly(2));
-
     }
 }
