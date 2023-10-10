@@ -1,10 +1,47 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <PackageId>Net.Utils.CloudWatchHandler)</PackageId>
+    <PackageId>Net.Utils.CloudWatchHandler</PackageId>
+    <Title>CloudWatch Handler for .NET</Title>
+    <Version>1.0.0</Version>
+    <Authors>darkarki83</Authors>
+    <Company>The-Poolz</Company>
+    <Product>Net Utils CloudWatch Handler</Product>
+    <Copyright>Copyright @ darkarki83 The-Poolz 2023</Copyright>
+    <PackageProjectUrl>https://github.com/The-Poolz/Net.Utils.CloudWatchHandler/tree/master</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/The-Poolz/Net.Utils.CloudWatchHandler/tree/master</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>AWS, CloudWatch, Logging, .NET, Handler, Utils, Utility, LogStream, AWSLogs, Monitoring, Debugging, Cloud</PackageTags>
+    <PackageReleaseNotes>Release Notes for Net.Utils.CloudWatchHandler v1.0.0:
+
+- Initial release of the CloudWatchHandler.
+- Provides functionality for logging to AWS CloudWatch.
+- Integrated LogStream service for efficient stream management.
+- Comprehensive message formatting utility for standardizing log entries.
+- Built for .NET with extensibility and ease of use in mind.
+
+Please refer to our documentation for detailed usage instructions and best practices.</PackageReleaseNotes>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Description>A .NET utility library for handling and logging messages to Amazon CloudWatch.</Description>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.CloudWatchLogs" Version="3.7.201.10" />
+  </ItemGroup>
 
 </Project>
