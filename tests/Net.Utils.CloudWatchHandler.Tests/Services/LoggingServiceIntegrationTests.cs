@@ -48,22 +48,18 @@ public class LoggingServiceIntegrationTests : IDisposable
         var testExceptionData = new ExceptionData { ExceptionMessage = testMessage };
         await _loggingService.LogMessageAsync(testExceptionData);
 
-        // Get logs to verify
         var logEvents = await _cloudWatchClient.GetLogEventsAsync(new GetLogEventsRequest
         {
             LogGroupName = TestLogGroupName,
             LogStreamName = await _logStreamService.CreateLogStreamAsync() // This assumes the log stream has just been created by the LoggingService.
         });
 
-        // Verify that the log message exists in the retrieved logs
         var exists = logEvents.Events.Any(e => e.Message.Contains(testMessage));
         Assert.True(exists);
     }
 
-    // Clean up resources after tests
     public void Dispose()
     {
-        // Consider cleaning up the resources you've created (e.g., deleting log streams, log groups, etc.)
-        // This ensures that you don't keep accumulating costs after the tests are done.
+        GC.SuppressFinalize(this);
     }
 }
