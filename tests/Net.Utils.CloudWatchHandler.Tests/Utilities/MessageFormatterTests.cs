@@ -10,7 +10,7 @@ public class MessageFormatterTests
     [Fact]
     public void FormatExceptionMessage_ValidJson_ReturnsJsonData()
     {
-        const string jsonData = "{\"message\": \"TestMessage\"}";
+        const string jsonData = "{\"Message\": \"TestMessage\"}";
         var result = MessageFormatter.FormatExceptionMessage(jsonData);
         result.Should().Be(jsonData);
     }
@@ -26,7 +26,7 @@ public class MessageFormatterTests
     [Fact]
     public void FormatExceptionMessage_EmptyMessage_ThrowsArgumentNullException()
     {
-        const string jsonData = "{\"message\": \"\"}";
+        const string jsonData = "{\"Message\": \"\"}";
         Action act = () => MessageFormatter.FormatExceptionMessage(jsonData);
         act.Should().Throw<ArgumentNullException>();
     }
@@ -34,7 +34,7 @@ public class MessageFormatterTests
     [Fact]
     public void FormatExceptionMessage_NullMessage_ThrowsArgumentNullException()
     {
-        const string jsonData = "{\"message\": null}";
+        const string jsonData = "{\"Message\": null}";
         Action act = () => MessageFormatter.FormatExceptionMessage(jsonData);
         act.Should().Throw<ArgumentNullException>();
     }

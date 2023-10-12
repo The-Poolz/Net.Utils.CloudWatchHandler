@@ -23,7 +23,7 @@ public class LoggingServiceTests
         const string applicationName = "LambdaSet";
         const string message = "TestMessage";
 
-        const string jsonData = $"{{\"LogLevel\":\"{logLevel}\",\"ExceptionType\":\"{exceptionType}\",\"ApplicationName\":\"{applicationName}\",\"message\":\"{message}\"}}";
+        const string jsonData = $"{{\"LogLevel\":\"{logLevel}\",\"ExceptionType\":\"{exceptionType}\",\"ApplicationName\":\"{applicationName}\",\"Message\":\"{message}\"}}";
 
         var expectedFormattedMessage = MessageFormatter.FormatExceptionMessage(jsonData);
 
@@ -48,7 +48,7 @@ public class LoggingServiceTests
         const string applicationName = "LambdaSet";
         const string message = "TestMessage";
 
-        const string jsonData = $"{{\"LogLevel\":\"{logLevel}\",\"ExceptionType\":\"{exceptionType}\",\"ApplicationName\":\"{applicationName}\",\"message\":\"{message}\"}}";
+        const string jsonData = $"{{\"LogLevel\":\"{logLevel}\",\"ExceptionType\":\"{exceptionType}\",\"ApplicationName\":\"{applicationName}\",\"Message\":\"{message}\"}}";
 
         _mockLogStreamService.Setup(x => x.CreateLogStreamAsync(null))
             .ReturnsAsync("TestLogStream");
