@@ -1,24 +1,26 @@
-﻿using Net.Utils.CloudWatchHandler.Models;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace Net.Utils.CloudWatchHandler.Utilities;
 
 public class MessageFormatter
 {
-    public static string FormatExceptionMessage(ExceptionData? exceptionData)
+    public static string FormatExceptionMessage(string jsonData)
     {
-        if (exceptionData == null)
+        using var doc = JsonDocument.Parse(jsonData);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("message", out var messageElement))
         {
-            throw new ArgumentNullException(nameof(exceptionData));
-        }
+            var message = messageElement.GetString();
 
-        if (string.IsNullOrWhiteSpace(exceptionData.ExceptionMessage))
+            if (string.IsNullOrWhiteSpace(message))
+                throw new ArgumentNullException(nameof(message));
+
+            return jsonData;
+        }
+        else
         {
-            throw new ArgumentNullException(nameof(exceptionData.ExceptionMessage));
+            throw new ArgumentException("The 'message' property is missing in the JSON data.");
         }
-
-        exceptionData.Time = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
-
-        return JsonSerializer.Serialize(exceptionData);
     }
 }

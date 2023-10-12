@@ -14,12 +14,10 @@ public class LogStreamService
         _logGroupName = logGroupName ?? throw new ArgumentNullException(nameof(logGroupName));
     }
 
-    public virtual async Task<string> CreateLogStreamAsync()
+    public virtual async Task<string> CreateLogStreamAsync(string? customLogStreamName = null!)
     {
-        var logStreamName = GenerateLogStreamName();
-
+        var logStreamName = customLogStreamName ?? GenerateLogStreamName();
         await TryCreateLogStreamAsync(new CreateLogStreamRequest(_logGroupName, logStreamName));
-
         return logStreamName;
     }
 
