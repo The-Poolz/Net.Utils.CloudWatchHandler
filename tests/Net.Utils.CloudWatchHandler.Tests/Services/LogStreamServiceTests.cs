@@ -58,4 +58,25 @@ public class LogStreamServiceTests
 
         result.Should().BeFalse();
     }
+    [Fact]
+    public async Task CreateLogStreamAsync_ShouldUseCustomLogStreamName()
+    {
+        const string customLogStreamName = "CustomLogStreamName";
+
+        _mockClient.Setup(x => x.CreateLogStreamAsync(It.IsAny<CreateLogStreamRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CreateLogStreamResponse());
+
+        var result = await _service.CreateLogStreamAsync(customLogStreamName);
+
+        result.Should().Be(customLogStreamName);
+    }
+
+    [Fact]
+    public async Task CreateLogStreamAsync_ShouldThrowExceptionForUnexpectedError()
+    {
+        _mockClient.Setup(x => x.CreateLogStreamAsync(It.IsAny<CreateLogStreamRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new System.InvalidOperationException());
+
+        await Assert.ThrowsAsync<System.InvalidOperationException>(() => _service.CreateLogStreamAsync());
+    }
 }

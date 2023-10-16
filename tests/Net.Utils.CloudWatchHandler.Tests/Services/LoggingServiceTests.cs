@@ -1,8 +1,8 @@
-﻿using Amazon.CloudWatchLogs;
+﻿using System.Text.Json;
+using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
 using FluentAssertions;
 using Moq;
-using Net.Utils.CloudWatchHandler.Models;
 using Net.Utils.CloudWatchHandler.Services;
 using Net.Utils.CloudWatchHandler.Utilities;
 using Xunit;
@@ -18,18 +18,16 @@ public class LoggingServiceTests
     [Fact]
     public async Task LogMessageAsync_ShouldLogFormattedMessage()
     {
-        var exceptionData = new ExceptionData
-        {
-            LogLevel = LogLevel.Error,
-            ExceptionType = "DownloaderException",
-            ApplicationName = "LambdaSet",
-            ExceptionMessage = "TestMessage",
-            Time = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")
-        };
+        const string logLevel = "Error";
+        const string exceptionType = "DownloaderException";
+        const string applicationName = "LambdaSet";
+        const string message = "TestMessage";
 
-        var expectedFormattedMessage = MessageFormatter.FormatExceptionMessage(exceptionData);
+        const string jsonData = $"{{\"LogLevel\":\"{logLevel}\",\"ExceptionType\":\"{exceptionType}\",\"ApplicationName\":\"{applicationName}\",\"Message\":\"{message}\"}}";
 
-        _mockLogStreamService.Setup(x => x.CreateLogStreamAsync())
+        var expectedFormattedMessage = MessageFormatter.FormatExceptionMessage(jsonData);
+
+        _mockLogStreamService.Setup(x => x.CreateLogStreamAsync(null))
             .ReturnsAsync("TestLogStream");
 
         _mockClient.Setup(x => x.PutLogEventsAsync(It.IsAny<PutLogEventsRequest>(), default))
@@ -37,7 +35,7 @@ public class LoggingServiceTests
 
         var service = new LoggingService(_mockClient.Object, TestLogGroupName, _mockLogStreamService.Object);
 
-        await service.LogMessageAsync(exceptionData);
+        await service.LogMessageAsync(jsonData);
 
         _mockClient.Verify(x => x.PutLogEventsAsync(It.Is<PutLogEventsRequest>(r => r.LogEvents[0].Message == expectedFormattedMessage), default), Times.Once);
     }
@@ -45,16 +43,14 @@ public class LoggingServiceTests
     [Fact]
     public async Task LogMessageAsync_ShouldRetry_WhenInvalidSequenceTokenExceptionThrown()
     {
-        var exceptionData = new ExceptionData
-        {
-            ExceptionMessage = "Test Message",
-            LogLevel = LogLevel.Info,
-            ExceptionType = "SomeException",
-            ApplicationName = "SomeApplication",
-            Time = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")
-        };
+        const string logLevel = "Error";
+        const string exceptionType = "DownloaderException";
+        const string applicationName = "LambdaSet";
+        const string message = "TestMessage";
 
-        _mockLogStreamService.Setup(x => x.CreateLogStreamAsync())
+        const string jsonData = $"{{\"LogLevel\":\"{logLevel}\",\"ExceptionType\":\"{exceptionType}\",\"ApplicationName\":\"{applicationName}\",\"Message\":\"{message}\"}}";
+
+        _mockLogStreamService.Setup(x => x.CreateLogStreamAsync(null))
             .ReturnsAsync("TestLogStream");
 
         _mockClient.SetupSequence(x => x.PutLogEventsAsync(It.IsAny<PutLogEventsRequest>(), default))
@@ -63,7 +59,7 @@ public class LoggingServiceTests
 
         var service = new LoggingService(_mockClient.Object, TestLogGroupName, _mockLogStreamService.Object);
 
-        var act = async () => await service.LogMessageAsync(exceptionData);
+        var act = async () => await service.LogMessageAsync(jsonData);
 
         await act.Should().NotThrowAsync();
         _mockClient.Verify(x => x.PutLogEventsAsync(It.IsAny<PutLogEventsRequest>(), default), Times.Exactly(2));

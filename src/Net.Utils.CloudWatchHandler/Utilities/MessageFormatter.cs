@@ -1,24 +1,36 @@
-﻿using Net.Utils.CloudWatchHandler.Models;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace Net.Utils.CloudWatchHandler.Utilities;
 
+/// <summary>
+/// Provides functionality to format exception messages.
+/// </summary>
 public class MessageFormatter
 {
-    public static string FormatExceptionMessage(ExceptionData? exceptionData)
+    /// <summary>
+    /// Formats the exception message based on the provided JSON data.
+    /// </summary>
+    /// <param name="jsonData">The JSON data containing the exception message.</param>
+    /// <returns>The formatted exception message.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if the Message is null, empty, or whitespace.</exception>
+    /// <exception cref="ArgumentException">Thrown if the 'Message' property is missing in the JSON data.</exception>
+    public static string FormatExceptionMessage(string jsonData)
     {
-        if (exceptionData == null)
+        using var doc = JsonDocument.Parse(jsonData);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("Message", out var messageElement))
         {
-            throw new ArgumentNullException(nameof(exceptionData));
-        }
+            var message = messageElement.GetString();
 
-        if (string.IsNullOrWhiteSpace(exceptionData.ExceptionMessage))
+            if (string.IsNullOrWhiteSpace(message))
+                throw new ArgumentNullException(nameof(message));
+
+            return jsonData;
+        }
+        else
         {
-            throw new ArgumentNullException(nameof(exceptionData.ExceptionMessage));
+            throw new ArgumentException("The 'Message' property is missing in the JSON data.");
         }
-
-        exceptionData.Time = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
-
-        return JsonSerializer.Serialize(exceptionData);
     }
 }
