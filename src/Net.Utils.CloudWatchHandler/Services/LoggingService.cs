@@ -18,9 +18,9 @@ public class LoggingService
         _logStreamService = logStreamService ?? throw new ArgumentNullException(nameof(logStreamService));
     }
 
-    public async Task LogMessageAsync(string exceptionData)
+    public async Task LogMessageAsync(string messageData)
     {
-        var formattedMessage = MessageFormatter.FormatExceptionMessage(exceptionData);
+        var formattedMessage = MessageFormatter.FormatExceptionMessage(messageData);
 
         var logEvent = new InputLogEvent
         {
@@ -44,7 +44,7 @@ public class LoggingService
         catch (InvalidSequenceTokenException ex)
         {
             _sequenceToken = ex.ExpectedSequenceToken;
-            await LogMessageAsync(exceptionData);
+            await LogMessageAsync(messageData);
         }
     }
 }

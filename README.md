@@ -33,14 +33,13 @@ using Net.Utils.CloudWatchHandler;
 var logStreamService = new LogStreamService(client, LogGroupName);
 var loggingService = new LoggingService(client, LogGroupName, logStreamService);
 
-// Create a new log stream
-var LogStreamName = await logStreamService.CreateLogStreamAsync();
-
 // Log a Message in JSON format
 // Required parameter: "Message"
 // Optional parameters: "ErrorLevel", "AppName", etc.
 var logMessage = "{\"Message\": \"Your Message\", \"ErrorLevel\": \"Error\", \"AppName\": \"YourApp\"}";
-await loggingService.LogMessageAsync(logMessage, LogStreamName);
+
+// Log a Message in JSON format
+await loggingService.LogMessageAsync(logMessage);
 ```
 
 ## Features

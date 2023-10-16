@@ -23,8 +23,8 @@ public class MessageFormatter
         {
             var message = messageElement.GetString();
 
-            if (string.IsNullOrWhiteSpace(jsonData))
-                throw new ArgumentNullException(nameof(jsonData));
+            if (string.IsNullOrWhiteSpace(message))
+                throw new ArgumentNullException(nameof(message));
 
             return jsonData;
         }
