@@ -52,7 +52,7 @@ public class LoggingServiceIntegrationTests : IDisposable
         var logEvents = await _cloudWatchClient.GetLogEventsAsync(new GetLogEventsRequest
         {
             LogGroupName = TestLogGroupName,
-            LogStreamName = await _logStreamService.CreateLogStreamAsync() // This assumes the log stream has just been created by the LoggingService.
+            LogStreamName = await _logStreamService.CreateLogStreamAsync()
         });
 
         var exists = logEvents.Events.Any(e => e.Message.Contains(testMessage));
