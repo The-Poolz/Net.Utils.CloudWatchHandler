@@ -33,14 +33,10 @@ using Net.Utils.CloudWatchHandler;
 var logStreamService = new LogStreamService(client, LogGroupName);
 var loggingService = new LoggingService(client, LogGroupName, logStreamService);
 
-// Log a Message in JSON format
-// Required parameter: "Message"
-// Optional parameters: "ErrorLevel", "AppName", etc.
-var logMessage = "{\"Message\": \"Your Message\", \"ErrorLevel\": \"Error\", \"AppName\": \"YourApp\"}";
-
-// Log a Message in JSON format
-await loggingService.LogMessageAsync(logMessage);
+// Log the message in JSON format
+await loggingService.LogMessageAsync(jsonData);
 ```
+Note: Before calling LogMessageAsync, ensure that jsonData is neither null nor empty. The library expects a valid JSON-formatted string.
 
 ## Features
 List the main features of your library/package.
