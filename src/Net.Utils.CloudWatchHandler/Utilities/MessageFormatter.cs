@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-namespace Net.Utils.CloudWatchHandler.Utilities;
+﻿namespace Net.Utils.CloudWatchHandler.Utilities;
 
 /// <summary>
 /// Provides functionality to format exception messages.
@@ -8,29 +6,18 @@ namespace Net.Utils.CloudWatchHandler.Utilities;
 public class MessageFormatter
 {
     /// <summary>
-    /// Formats the exception message based on the provided JSON data.
+    /// Checks if the provided JSON data is null or empty.
     /// </summary>
     /// <param name="jsonData">The JSON data containing the exception message.</param>
-    /// <returns>The formatted exception message.</returns>
-    /// <exception cref="ArgumentNullException">Thrown if the Message is null, empty, or whitespace.</exception>
-    /// <exception cref="ArgumentException">Thrown if the 'Message' property is missing in the JSON data.</exception>
+    /// <returns>The same JSON data if it is not null or empty.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if the JSON data is null, empty, or whitespace.</exception>
     public static string FormatExceptionMessage(string jsonData)
     {
-        using var doc = JsonDocument.Parse(jsonData);
-        var root = doc.RootElement;
-
-        if (root.TryGetProperty("Message", out var messageElement))
+        if (string.IsNullOrWhiteSpace(jsonData))
         {
-            var message = messageElement.GetString();
-
-            if (string.IsNullOrWhiteSpace(message))
-                throw new ArgumentNullException(nameof(message));
-
-            return jsonData;
+            throw new ArgumentNullException(nameof(jsonData), "The provided JSON data should not be null or empty.");
         }
-        else
-        {
-            throw new ArgumentException("The 'Message' property is missing in the JSON data.");
-        }
+
+        return jsonData;
     }
 }

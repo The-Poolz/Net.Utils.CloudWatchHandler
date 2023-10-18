@@ -20,8 +20,7 @@ public class LogStreamServiceTests
         _service = new LogStreamService(_mockClient.Object, TestLogGroupName);
     }
 
-    [Fact]
-    public void ResetStaticVariables()
+    private static void ResetStaticVariables()
     {
         typeof(LogStreamService)
             .GetField("_currentLogStreamName", BindingFlags.Static | BindingFlags.NonPublic)
@@ -46,6 +45,7 @@ public class LogStreamServiceTests
     [Fact]
     public async Task CreateLogStreamAsync_ShouldThrowException_WhenCloudWatchClientThrowsException()
     {
+        ResetStaticVariables();
         _mockClient.Setup(x => x.CreateLogStreamAsync(It.IsAny<CreateLogStreamRequest>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new Exception("CloudWatch Error"));
 
