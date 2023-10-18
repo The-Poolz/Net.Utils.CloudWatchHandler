@@ -44,7 +44,7 @@ public class LoggingServiceIntegrationTests : IDisposable
     public async Task LogMessageAsync_ShouldLogToCloudWatch()
     {
         const string testMessage = "IntegrationTestMessage";
-        const string jsonData = $"{{\"Message\":\"{testMessage}\"}}";
+        const string? jsonData = $"{{\"Message\":\"{testMessage}\"}}";
 
         await _loggingService.LogMessageAsync(jsonData);
 

@@ -18,7 +18,7 @@ public class LoggingService
         _logStreamService = logStreamService ?? throw new ArgumentNullException(nameof(logStreamService));
     }
 
-    public async Task LogMessageAsync(string messageData)
+    public async Task LogMessageAsync(string? messageData)
     {
         var formattedMessage = MessageFormatter.FormatExceptionMessage(messageData);
 

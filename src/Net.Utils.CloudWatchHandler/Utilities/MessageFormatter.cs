@@ -11,7 +11,7 @@ public class MessageFormatter
     /// <param name="jsonData">The JSON data containing the exception message.</param>
     /// <returns>The same JSON data if it is not null or empty.</returns>
     /// <exception cref="ArgumentNullException">Thrown if the JSON data is null, empty, or whitespace.</exception>
-    public static string FormatExceptionMessage(string jsonData)
+    public static string FormatExceptionMessage(string? jsonData)
     {
         if (string.IsNullOrWhiteSpace(jsonData))
         {
