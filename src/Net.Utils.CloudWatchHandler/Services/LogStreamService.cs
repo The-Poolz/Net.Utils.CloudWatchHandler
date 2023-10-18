@@ -17,20 +17,29 @@ public class LogStreamService
         _logGroupName = logGroupName ?? throw new ArgumentNullException(nameof(logGroupName));
     }
 
-    public virtual async Task<string?> CreateLogStreamAsync(string? customLogStreamName = null)
+    public virtual async Task<string?> CreateLogStreamAsync()
     {
         if (_lastLogStreamCreationDate.Date == DateTime.UtcNow.Date)
-        {
             return _currentLogStreamName;
-        }
 
-        var logStreamName = customLogStreamName ?? GenerateLogStreamName();
+        var logStreamName = GenerateLogStreamName();
         await TryCreateLogStreamAsync(new CreateLogStreamRequest(_logGroupName, logStreamName));
 
         _currentLogStreamName = logStreamName;
         _lastLogStreamCreationDate = DateTime.UtcNow;
 
         return logStreamName;
+    }
+
+    public virtual async Task<bool> LogStreamExistsAsync(string logStreamName)
+    {
+        var response = await _client.DescribeLogStreamsAsync(new DescribeLogStreamsRequest
+        {
+            LogGroupName = _logGroupName,
+            LogStreamNamePrefix = logStreamName
+        });
+
+        return response.LogStreams.Count > 0;
     }
 
     private static string? GenerateLogStreamName() => $"LambdaSetStream-{DateTime.UtcNow:yyyy-MM-dd}";

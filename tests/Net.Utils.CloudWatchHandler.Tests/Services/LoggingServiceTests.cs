@@ -27,7 +27,7 @@ public class LoggingServiceTests
 
         var expectedFormattedMessage = MessageFormatter.FormatExceptionMessage(jsonData);
 
-        _mockLogStreamService.Setup(x => x.CreateLogStreamAsync(null))
+        _mockLogStreamService.Setup(x => x.CreateLogStreamAsync())
             .ReturnsAsync("TestLogStream");
 
         _mockClient.Setup(x => x.PutLogEventsAsync(It.IsAny<PutLogEventsRequest>(), default))
@@ -50,7 +50,7 @@ public class LoggingServiceTests
 
         const string jsonData = $"{{\"LogLevel\":\"{logLevel}\",\"ExceptionType\":\"{exceptionType}\",\"ApplicationName\":\"{applicationName}\",\"Message\":\"{message}\"}}";
 
-        _mockLogStreamService.Setup(x => x.CreateLogStreamAsync(null))
+        _mockLogStreamService.Setup(x => x.CreateLogStreamAsync())
             .ReturnsAsync("TestLogStream");
 
         _mockClient.SetupSequence(x => x.PutLogEventsAsync(It.IsAny<PutLogEventsRequest>(), default))
