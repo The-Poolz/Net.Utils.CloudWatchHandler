@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-using Amazon.CloudWatchLogs;
+﻿using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
 using FluentAssertions;
 using Moq;

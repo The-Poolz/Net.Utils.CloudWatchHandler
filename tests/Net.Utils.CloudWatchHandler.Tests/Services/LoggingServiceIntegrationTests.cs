@@ -1,6 +1,5 @@
 ﻿using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Moq;
 using Net.Utils.CloudWatchHandler.Services;
 using Xunit;

@@ -41,7 +41,7 @@ public class LogStreamService
         return response.LogStreams.Count > 0;
     }
 
-    private static string? GenerateLogStreamName() => $"LambdaSetStream-{DateTime.UtcNow:yyyy-MM-dd}";
+    private static string GenerateLogStreamName() => $"LambdaSetStream-{DateTime.UtcNow:yyyy-MM-dd}";
 
     private async Task TryCreateLogStreamAsync(CreateLogStreamRequest request)
     {
