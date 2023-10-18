@@ -1,5 +1,6 @@
 ﻿using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
+using Net.Utils.CloudWatchHandler.Helpers;
 
 namespace Net.Utils.CloudWatchHandler.Services;
 
@@ -7,9 +8,6 @@ public class LogStreamService
 {
     private readonly IAmazonCloudWatchLogs _client;
     private readonly string _logGroupName;
-
-    private static string? _currentLogStreamName;
-    private static DateTime _lastLogStreamCreationDate;
 
     public LogStreamService(IAmazonCloudWatchLogs client, string logGroupName)
     {
@@ -19,14 +17,15 @@ public class LogStreamService
 
     public virtual async Task<string?> CreateLogStreamAsync()
     {
-        if (_lastLogStreamCreationDate.Date == DateTime.UtcNow.Date)
-            return _currentLogStreamName;
+        var manager = LogStreamManager.Instance;
+
+        if (!manager.ShouldCreateNewStream())
+            return manager.CurrentLogStreamName;
 
         var logStreamName = GenerateLogStreamName();
         await TryCreateLogStreamAsync(new CreateLogStreamRequest(_logGroupName, logStreamName));
 
-        _currentLogStreamName = logStreamName;
-        _lastLogStreamCreationDate = DateTime.UtcNow;
+        manager.UpdateLogStream(logStreamName);
 
         return logStreamName;
     }
