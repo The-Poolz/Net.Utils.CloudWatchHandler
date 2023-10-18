@@ -46,6 +46,8 @@ await loggingService.LogMessageAsync(logMessage);
 List the main features of your library/package.
 
 - Easily create and manage AWS CloudWatch log streams.
+- Optimized to create a new log stream only once per day.
+- Appends messages to the existing log stream within the same day.
 - Simplified logging service to send messages to CloudWatch.
 - Customizable message formatter utility.
 
