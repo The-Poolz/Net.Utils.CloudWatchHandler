@@ -10,6 +10,11 @@ public class LogStreamManager
 
     private LogStreamManager() { }
 
+    public static void ResetInstanceForTesting()
+    {
+        _instance = null;
+    }
+
     public void UpdateLogStream(string? logStreamName)
     {
         CurrentLogStreamName = logStreamName;
