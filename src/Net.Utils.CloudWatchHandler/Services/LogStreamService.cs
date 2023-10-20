@@ -15,14 +15,15 @@ public class LogStreamService
         _logGroupName = logGroupName ?? throw new ArgumentNullException(nameof(logGroupName));
     }
 
-    public virtual async Task<string?> CreateLogStreamAsync()
+    public virtual async Task<string?> CreateLogStreamAsync(string? prefix, string? dateTimeFormat)
     {
         var manager = LogStreamManager.Instance;
 
         if (!manager.ShouldCreateNewStream())
             return manager.CurrentLogStreamName;
 
-        var logStreamName = GenerateLogStreamName();
+        var logStreamName = GenerateLogStreamName(prefix, dateTimeFormat);
+
         await TryCreateLogStreamAsync(new CreateLogStreamRequest(_logGroupName, logStreamName));
 
         manager.UpdateLogStream(logStreamName);
@@ -41,7 +42,18 @@ public class LogStreamService
         return response.LogStreams.Count > 0;
     }
 
-    private static string GenerateLogStreamName() => $"LambdaSetStream-{DateTime.UtcNow:yyyy-MM-dd}";
+    private static string GenerateLogStreamName(string? prefix, string? frequency)
+    {
+        Console.WriteLine("frequency = " + frequency);
+        var dateTimeFormat = frequency?.ToLower() switch
+        {
+            "daily" => "yyyy-MM-dd",
+            "hourly" => "yyyy-MM-dd-HH",
+            _ => "yyyy-MM-dd"
+        };
+
+        return $"{prefix}-{DateTime.UtcNow.ToString(dateTimeFormat)}";
+    }
 
     private async Task TryCreateLogStreamAsync(CreateLogStreamRequest request)
     {

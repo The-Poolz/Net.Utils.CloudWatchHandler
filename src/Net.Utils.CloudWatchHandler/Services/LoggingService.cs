@@ -1,6 +1,8 @@
 ﻿using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
-using Net.Utils.CloudWatchHandler.Utilities;
+using Net.Utils.CloudWatchHandler.Models;
+using Newtonsoft.Json;
+using InvalidOperationException = System.InvalidOperationException;
 
 namespace Net.Utils.CloudWatchHandler.Services;
 
@@ -20,18 +22,20 @@ public class LoggingService
 
     public async Task LogMessageAsync(string? messageData)
     {
-        var formattedMessage = MessageFormatter.FormatExceptionMessage(messageData);
+        var deserializedMessageData = JsonConvert.DeserializeObject<MessageData>(messageData ?? string.Empty) ?? throw new InvalidOperationException();
+        var prefix = deserializedMessageData.Prefix;
+        var dateTimeFormat = deserializedMessageData.DateTimeFormat;
 
         var logEvent = new InputLogEvent
         {
             Timestamp = DateTime.UtcNow,
-            Message = formattedMessage
+            Message = messageData
         };
 
         var request = new PutLogEventsRequest
         {
             LogGroupName = _logGroupName,
-            LogStreamName = await _logStreamService.CreateLogStreamAsync(),
+            LogStreamName = await _logStreamService.CreateLogStreamAsync(prefix, dateTimeFormat),
             LogEvents = new List<InputLogEvent> { logEvent },
             SequenceToken = _sequenceToken
         };
