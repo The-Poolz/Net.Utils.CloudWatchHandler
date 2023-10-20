@@ -42,7 +42,7 @@ public class LogStreamService
         return response.LogStreams.Count > 0;
     }
 
-    private static string GenerateLogStreamName(string? prefix, string? frequency)
+    public static string GenerateLogStreamName(string? prefix, string? frequency)
     {
         Console.WriteLine("frequency = " + frequency);
         var dateTimeFormat = frequency?.ToLower() switch

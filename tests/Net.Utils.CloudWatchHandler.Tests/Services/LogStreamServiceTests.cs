@@ -4,7 +4,6 @@ using FluentAssertions;
 using Moq;
 using Net.Utils.CloudWatchHandler.Helpers;
 using Net.Utils.CloudWatchHandler.Services;
-using System.Reflection;
 using Xunit;
 
 namespace Net.Utils.CloudWatchHandler.Tests.Services;
@@ -12,107 +11,99 @@ namespace Net.Utils.CloudWatchHandler.Tests.Services;
 public class LogStreamServiceTests
 {
     private readonly Mock<IAmazonCloudWatchLogs> _mockClient;
+    private const string LogGroupName = "logGroupName";
     private readonly LogStreamService _service;
-    private const string TestLogGroupName = "TestLogGroupName";
 
     public LogStreamServiceTests()
     {
         _mockClient = new Mock<IAmazonCloudWatchLogs>();
-        _service = new LogStreamService(_mockClient.Object, TestLogGroupName);
-        LogStreamManager.ResetInstanceForTesting();
+        var mockLogStreamManager = new Mock<ILogStreamManager>();
+        _service = new LogStreamService(_mockClient.Object, LogGroupName, mockLogStreamManager.Object);
     }
-
-
-
 
     [Fact]
     public async Task CreateLogStreamAsync_ShouldCall_ShouldCreateNewStream()
     {
-        // Arrange
         var mockClient = new Mock<IAmazonCloudWatchLogs>();
         var mockLogStreamManager = new Mock<ILogStreamManager>();
-        var service = new LogStreamService(mockClient.Object, TestLogGroupName, mockLogStreamManager.Object);
+        var service = new LogStreamService(mockClient.Object, LogGroupName, mockLogStreamManager.Object);
 
         await service.CreateLogStreamAsync("prefix", "daily");
 
         mockLogStreamManager.Verify(manager => manager.ShouldCreateNewStream(), Times.Once);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /*
-
     [Fact]
-    public async Task CreateLogStreamAsync_ShouldReturnLogStreamName()
-    { 
-        var generatedStreamName = $"LambdaSetStream-{DateTime.UtcNow:yyyy-MM-dd}";
+    public async Task CreateLogStreamAsync_ShouldCreateNewStream_WhenRequired()
+    {
+        var mockClient = new Mock<IAmazonCloudWatchLogs>();
+        var mockLogStreamManager = new Mock<ILogStreamManager>();
+        mockLogStreamManager.Setup(m => m.ShouldCreateNewStream()).Returns(true);
+        var service = new LogStreamService(mockClient.Object, LogGroupName, mockLogStreamManager.Object);
 
-        _mockClient.Setup(x => x.CreateLogStreamAsync(It.IsAny<CreateLogStreamRequest>(), default))
-            .Returns(Task.FromResult(new CreateLogStreamResponse()));
+        var result = await service.CreateLogStreamAsync("prefix", "daily");
 
-        var result = await _service.CreateLogStreamAsync();
-
-        result.Should().Be(generatedStreamName);
+        result.Should().NotBeNullOrEmpty();
+        mockClient.Verify(client => client.CreateLogStreamAsync(It.IsAny<CreateLogStreamRequest>(), default), Times.Once);
     }
 
     [Fact]
-    public async Task LogStreamExistsAsync_ShouldReturnTrueIfExists()
+    public async Task CreateLogStreamAsync_ShouldNotCreateNewStream_WhenNotRequired()
     {
-        const string existingStreamName = "existingStream";
-        _mockClient.Setup(x => x.DescribeLogStreamsAsync(It.IsAny<DescribeLogStreamsRequest>(), default))
-            .Returns(Task.FromResult(new DescribeLogStreamsResponse
-            {
-                LogStreams = new List<LogStream> { new LogStream { LogStreamName = existingStreamName } }
-            }));
+        var mockClient = new Mock<IAmazonCloudWatchLogs>();
+        var mockLogStreamManager = new Mock<ILogStreamManager>();
+        mockLogStreamManager.Setup(m => m.ShouldCreateNewStream()).Returns(false);
+        var service = new LogStreamService(mockClient.Object, LogGroupName, mockLogStreamManager.Object);
 
-        var result = await _service.LogStreamExistsAsync(existingStreamName);
+        var result = await service.CreateLogStreamAsync("prefix", "daily");
+
+        result.Should().BeNull();
+        mockClient.Verify(client => client.CreateLogStreamAsync(It.IsAny<CreateLogStreamRequest>(), default), Times.Never);
+    }
+
+    [Fact]
+    public async Task LogStreamExistsAsync_ShouldReturnTrue_WhenLogStreamExists()
+    {
+        _mockClient.Setup(client => client.DescribeLogStreamsAsync(It.IsAny<DescribeLogStreamsRequest>(), default))
+            .ReturnsAsync(new DescribeLogStreamsResponse
+            {
+                LogStreams = new List<LogStream> { new LogStream() }
+            });
+
+        var result = await _service.LogStreamExistsAsync("existingLogStream");
 
         result.Should().BeTrue();
     }
 
     [Fact]
-    public async Task LogStreamExistsAsync_ShouldReturnFalseIfNotExists()
+    public async Task LogStreamExistsAsync_ShouldReturnFalse_WhenLogStreamDoesNotExist()
     {
-        _mockClient.Setup(x => x.DescribeLogStreamsAsync(It.IsAny<DescribeLogStreamsRequest>(), default))
-            .Returns(Task.FromResult(new DescribeLogStreamsResponse { LogStreams = new List<LogStream>() }));
+        _mockClient.Setup(client => client.DescribeLogStreamsAsync(It.IsAny<DescribeLogStreamsRequest>(), default))
+            .ReturnsAsync(new DescribeLogStreamsResponse
+            {
+                LogStreams = new List<LogStream>()
+            });
 
-        var result = await _service.LogStreamExistsAsync("nonexistentStream");
+        var result = await _service.LogStreamExistsAsync("nonExistingLogStream");
 
         result.Should().BeFalse();
     }
 
     [Fact]
-    public async Task CreateLogStreamAsync_ShouldThrowExceptionWhenClientThrows()
+    public void GenerateLogStreamName_ShouldReturnCorrectlyFormattedName_WhenGivenFrequency()
     {
-        _mockClient.Setup(x => x.CreateLogStreamAsync(It.IsAny<CreateLogStreamRequest>(), default))
-            .Throws(new Exception("CloudWatch Error"));
+        var result = LogStreamService.GenerateLogStreamName("prefix", "daily");
 
-        var action = async () => { await _service.CreateLogStreamAsync(); };
-
-        await action.Should().ThrowAsync<Exception>().WithMessage("CloudWatch Error");
+        result.Should().StartWith("prefix-");
+        result.Should().EndWith(DateTime.UtcNow.ToString("yyyy-MM-dd"));
     }
 
     [Fact]
-    public async Task TryCreateLogStreamAsync_ShouldCallCreateLogStreamAsync()
+    public void GenerateLogStreamName_ShouldReturnCorrectlyFormattedName_WhenGivenHourlyFrequency()
     {
-        var methodInfo = _service.GetType().GetMethod("TryCreateLogStreamAsync", BindingFlags.NonPublic | BindingFlags.Instance);
-        var request = new CreateLogStreamRequest(TestLogGroupName, "someStreamName");
-        object[] parameters = { request };
+        var result = LogStreamService.GenerateLogStreamName("prefix", "hourly");
 
-        if (methodInfo != null) await (Task)methodInfo.Invoke(_service, parameters)!;
-
-        _mockClient.Verify(client => client.CreateLogStreamAsync(It.IsAny<CreateLogStreamRequest>(), default), Times.Once);
-    }*/
+        result.Should().StartWith("prefix-");
+        result.Should().EndWith(DateTime.UtcNow.ToString("yyyy-MM-dd-HH"));
+    }
 }
