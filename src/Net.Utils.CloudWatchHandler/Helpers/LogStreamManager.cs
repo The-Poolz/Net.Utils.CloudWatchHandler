@@ -2,8 +2,9 @@
 
 public class LogStreamManager
 {
-    private static LogStreamManager? _instance;
-    public static LogStreamManager Instance => _instance ??= new LogStreamManager();
+    private static readonly Lazy<LogStreamManager> LazyInstance = new Lazy<LogStreamManager>(() => new LogStreamManager());
+
+    public static LogStreamManager Instance => LazyInstance.Value;
 
     public string? CurrentLogStreamName { get; private set; }
     public DateTime LastLogStreamCreationDate { get; private set; }
@@ -12,7 +13,7 @@ public class LogStreamManager
 
     public static void ResetInstanceForTesting()
     {
-        _instance = null;
+        // Our logic here. This could be complex with Lazy<T>
     }
 
     public void UpdateLogStream(string? logStreamName)
