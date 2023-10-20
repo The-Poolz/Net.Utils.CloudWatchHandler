@@ -8,25 +8,25 @@ public class LogStreamService
 {
     private readonly IAmazonCloudWatchLogs _client;
     private readonly string _logGroupName;
+    private readonly ILogStreamManager _logStreamManager;
 
-    public LogStreamService(IAmazonCloudWatchLogs client, string logGroupName)
+    public LogStreamService(IAmazonCloudWatchLogs client, string logGroupName, ILogStreamManager logStreamManager)
     {
         _client = client ?? throw new ArgumentNullException(nameof(client));
         _logGroupName = logGroupName ?? throw new ArgumentNullException(nameof(logGroupName));
+        _logStreamManager = logStreamManager ?? throw new ArgumentNullException(nameof(logStreamManager));
     }
 
     public virtual async Task<string?> CreateLogStreamAsync(string? prefix, string? dateTimeFormat)
     {
-        var manager = LogStreamManager.Instance;
-
-        if (!manager.ShouldCreateNewStream())
-            return manager.CurrentLogStreamName;
+        if (!_logStreamManager.ShouldCreateNewStream())
+            return _logStreamManager.CurrentLogStreamName;
 
         var logStreamName = GenerateLogStreamName(prefix, dateTimeFormat);
 
         await TryCreateLogStreamAsync(new CreateLogStreamRequest(_logGroupName, logStreamName));
 
-        manager.UpdateLogStream(logStreamName);
+        _logStreamManager.UpdateLogStream(logStreamName);
 
         return logStreamName;
     }

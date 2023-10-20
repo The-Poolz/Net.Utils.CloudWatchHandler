@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Net.Utils.CloudWatchHandler.Helpers;
+﻿using Net.Utils.CloudWatchHandler.Helpers;
 using FluentAssertions;
 using Xunit;
 
@@ -8,7 +7,7 @@ namespace Net.Utils.CloudWatchHandler.Tests.Helpers;
 public class LogStreamManagerTests
 {
     [Fact]
-    public void SingletonInstance_ShouldReturnSameInstance()
+    public void Instance_ShouldReturnSameInstance()
     {
         var instance1 = LogStreamManager.Instance;
         var instance2 = LogStreamManager.Instance;
@@ -17,38 +16,67 @@ public class LogStreamManagerTests
     }
 
     [Fact]
-    public void UpdateLogStream_ShouldUpdateProperties()
+    public void UpdateLogStream_ShouldUpdateCurrentLogStreamName()
     {
-        var instance = LogStreamManager.Instance;
-        const string streamName = "testStream";
-        instance.UpdateLogStream(streamName);
+        const string logStreamName = "NewLogStream";
 
-        instance.CurrentLogStreamName.Should().Be(streamName);
-        instance.LastLogStreamCreationDate.Date.Should().Be(DateTime.UtcNow.Date);
+        LogStreamManager.Instance.UpdateLogStream(logStreamName);
+
+        LogStreamManager.Instance.CurrentLogStreamName.Should().Be(logStreamName);
     }
 
     [Fact]
-    public void ShouldCreateNewStream_ShouldReturnFalse_IfDateIsSame()
+    public void ShouldCreateNewStream_GivenValidHourlyFormat_ReturnsFalse()
     {
-        var instance = LogStreamManager.Instance;
-        instance.UpdateLogStream("testStream");
+        var logStreamName = $"MyPrefix-{DateTime.UtcNow:yyyy-MM-dd-HH}";
+        LogStreamManager.Instance.UpdateLogStream(logStreamName);
 
-        Debug.Assert(instance != null, nameof(instance) + " != null");
-        var result = instance.ShouldCreateNewStream();
+        var result = LogStreamManager.Instance.ShouldCreateNewStream();
+
         result.Should().BeFalse();
     }
 
     [Fact]
-    public void ResetInstanceForTesting_ShouldResetSingletonInstance()
+    public void ShouldCreateNewStream_GivenValidDailyFormat_ReturnsFalse()
     {
-        LogStreamManager.Instance.UpdateLogStream("initialStream");
-        LogStreamManager.Instance.CurrentLogStreamName.Should().Be("initialStream");
+        var logStreamName = $"MyPrefix-{DateTime.UtcNow:yyyy-MM-dd}";
+        LogStreamManager.Instance.UpdateLogStream(logStreamName);
 
-        LogStreamManager.ResetInstanceForTesting();
+        var result = LogStreamManager.Instance.ShouldCreateNewStream();
 
-        LogStreamManager.Instance.CurrentLogStreamName.Should().BeNull();
+        result.Should().BeFalse();
+    }
 
-        LogStreamManager.Instance.UpdateLogStream("newStream");
-        LogStreamManager.Instance.CurrentLogStreamName.Should().Be("newStream");
+    [Fact]
+    public void ShouldCreateNewStream_GivenInvalidFormat_ReturnsTrue()
+    {
+        LogStreamManager.Instance.UpdateLogStream("InvalidFormat");
+
+        var result = LogStreamManager.Instance.ShouldCreateNewStream();
+
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ShouldCreateNewStream_GivenNullStreamName_ReturnsTrue()
+    {
+        LogStreamManager.Instance.UpdateLogStream(null);
+
+        var result = LogStreamManager.Instance.ShouldCreateNewStream();
+
+        result.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("InvalidPrefix-Date-2022-11-11")]
+    [InlineData("OnlyPrefix")]
+    [InlineData("OnlyDate-2022-11-11")]
+    public void ShouldCreateNewStream_InvalidLogStreamNameFormats_ShouldReturnTrue(string logStreamName)
+    {
+        LogStreamManager.Instance.UpdateLogStream(logStreamName);
+
+        var result = LogStreamManager.Instance.ShouldCreateNewStream();
+
+        result.Should().BeTrue();
     }
 }

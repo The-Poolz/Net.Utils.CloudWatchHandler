@@ -3,9 +3,9 @@ using System.Text.RegularExpressions;
 
 namespace Net.Utils.CloudWatchHandler.Helpers;
 
-public class LogStreamManager
+public class LogStreamManager : ILogStreamManager
 {
-    private static readonly Lazy<LogStreamManager> LazyInstance = new Lazy<LogStreamManager>(() => new LogStreamManager());
+    private static readonly Lazy<LogStreamManager> LazyInstance = new(() => new LogStreamManager());
 
     public static LogStreamManager Instance => LazyInstance.Value;
 
