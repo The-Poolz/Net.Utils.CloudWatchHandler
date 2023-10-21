@@ -20,7 +20,9 @@ public class LogStreamManager : ILogStreamManager
         if (string.IsNullOrEmpty(CurrentLogStreamName))
             return true;
 
-        var match = Regex.Match(CurrentLogStreamName, @"\d{4}-\d{2}-\d{2}(-\d{2})?");
+        var regexPattern = new Regex(@"\d{4}-\d{2}-\d{2}(-\d{2})?", RegexOptions.None, TimeSpan.FromMilliseconds(50));
+
+        var match = regexPattern.Match(CurrentLogStreamName);
         if (!match.Success)
             return true;
 
