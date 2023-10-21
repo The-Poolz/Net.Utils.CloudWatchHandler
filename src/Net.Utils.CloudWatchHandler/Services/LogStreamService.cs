@@ -4,7 +4,7 @@ using Net.Utils.CloudWatchHandler.Helpers;
 
 namespace Net.Utils.CloudWatchHandler.Services;
 
-public class LogStreamService
+public class LogStreamService : ILogStreamService
 {
     private readonly IAmazonCloudWatchLogs _client;
     private readonly string _logGroupName;

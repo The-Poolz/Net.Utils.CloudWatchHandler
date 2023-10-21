@@ -10,7 +10,7 @@ public class LoggingServiceIntegrationTests : IDisposable
 {
     private readonly IAmazonCloudWatchLogs _cloudWatchClient;
     private const string TestLogGroupName = "ErrorDownloader";
-    private readonly LogStreamService _logStreamService;
+    private readonly LogStreamService _logStreamzService;
     private readonly LoggingService _loggingService;
 
     public LoggingServiceIntegrationTests()
@@ -36,28 +36,8 @@ public class LoggingServiceIntegrationTests : IDisposable
             });
         _cloudWatchClient = mockCloudWatchClient.Object;
 
-        //_logStreamService = new LogStreamService(_cloudWatchClient, TestLogGroupName);
-        _loggingService = new LoggingService(_cloudWatchClient, TestLogGroupName, _logStreamService);
+        _loggingService = new LoggingService(_cloudWatchClient, TestLogGroupName, _logStreamzService);
     }
-
-    /*[Fact]
-    public async Task LogMessageAsync_ShouldLogToCloudWatch()
-    {
-        const string testMessage = "IntegrationTestMessage";
-        const string? jsonData = $"{{\"Message\":\"{testMessage}\"}}";
-
-        await _loggingService.LogMessageAsync(jsonData);
-
-        var logEvents = await _cloudWatchClient.GetLogEventsAsync(new GetLogEventsRequest
-        {
-            LogGroupName = TestLogGroupName,
-            LogStreamName = await _logStreamService.CreateLogStreamAsync()
-        });
-
-        var exists = logEvents.Events.Any(e => e.Message.Contains(testMessage));
-        Assert.True(exists);
-    }*/
-
     public void Dispose()
     {
         GC.SuppressFinalize(this);

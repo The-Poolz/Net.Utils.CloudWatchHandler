@@ -10,10 +10,10 @@ public class LoggingService
 {
     private readonly IAmazonCloudWatchLogs _cloudWatchClient;
     private readonly string _logGroupName;
-    private readonly LogStreamService _logStreamService;
+    private readonly ILogStreamService _logStreamService;
     private string? _sequenceToken;
 
-    public LoggingService(IAmazonCloudWatchLogs cloudWatchClient, string logGroupName, LogStreamService logStreamService)
+    public LoggingService(IAmazonCloudWatchLogs cloudWatchClient, string logGroupName, ILogStreamService logStreamService)
     {
         _cloudWatchClient = cloudWatchClient ?? throw new ArgumentNullException(nameof(cloudWatchClient));
         _logGroupName = logGroupName ?? throw new ArgumentNullException(nameof(logGroupName));

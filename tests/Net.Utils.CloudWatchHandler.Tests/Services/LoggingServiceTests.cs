@@ -1,5 +1,7 @@
-﻿using Amazon.CloudWatchLogs;
+﻿using System.Reflection;
+using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
+using FluentAssertions;
 using Moq;
 using Net.Utils.CloudWatchHandler.Models;
 using Net.Utils.CloudWatchHandler.Services;
@@ -10,49 +12,81 @@ namespace Net.Utils.CloudWatchHandler.Tests.Services;
 
 public class LoggingServiceTests
 {
-    [Fact]
-    public async Task LogMessageAsync_ShouldCall_CreateLogStreamAsync()
+    private readonly Mock<IAmazonCloudWatchLogs> _mockCloudWatchClient;
+    private readonly Mock<ILogStreamService> _mockLogStreamService;
+    private const string LogGroupName = "logGroupName";
+
+    public LoggingServiceTests()
     {
-        var mockCloudWatchClient = new Mock<IAmazonCloudWatchLogs>();
-        var mockLogStreamService = new Mock<LogStreamService>(MockBehavior.Strict, mockCloudWatchClient.Object, "logGroupName");
-        var service = new LoggingService(mockCloudWatchClient.Object, "logGroupName", mockLogStreamService.Object);
-
-        var messageData = new MessageData
-        {
-            Prefix = "prefix",
-            DateTimeFormat = "daily"
-        };
-
-        var serializedMessageData = JsonConvert.SerializeObject(messageData);
-
-        mockLogStreamService.Setup(m => m.CreateLogStreamAsync("prefix", "daily")).ReturnsAsync("someLogStream").Verifiable();
-
-        await service.LogMessageAsync(serializedMessageData);
-
-        mockLogStreamService.Verify();
+        _mockCloudWatchClient = new Mock<IAmazonCloudWatchLogs>();
+        _mockLogStreamService = new Mock<ILogStreamService>();
     }
 
     [Fact]
     public async Task LogMessageAsync_ShouldCall_PutLogEventsAsync()
     {
-        var mockCloudWatchClient = new Mock<IAmazonCloudWatchLogs>();
-        var mockLogStreamService = new Mock<LogStreamService>(MockBehavior.Strict, mockCloudWatchClient.Object, "logGroupName");
-        var service = new LoggingService(mockCloudWatchClient.Object, "logGroupName", mockLogStreamService.Object);
+        var messageData = new MessageData { Prefix = "prefix", DateTimeFormat = "daily", Message = "Our Message" };
+        var jsonMessageData = JsonConvert.SerializeObject(messageData);
 
-        var messageData = new MessageData
+        _mockLogStreamService.Setup(m => m.CreateLogStreamAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync("logStreamName");
+
+        var putLogEventsResponse = new PutLogEventsResponse
         {
-            Prefix = "prefix",
-            DateTimeFormat = "daily"
+            NextSequenceToken = "NextSequenceToken123"
         };
 
-        var serializedMessageData = JsonConvert.SerializeObject(messageData);
+        _mockCloudWatchClient.Setup(client => client.PutLogEventsAsync(It.IsAny<PutLogEventsRequest>(), default))
+            .ReturnsAsync(putLogEventsResponse);
 
-        mockLogStreamService.Setup(m => m.CreateLogStreamAsync("prefix", "daily")).ReturnsAsync("someLogStream");
-        mockCloudWatchClient.Setup(m => m.PutLogEventsAsync(It.IsAny<PutLogEventsRequest>(), default)).ReturnsAsync(new PutLogEventsResponse());
+        var service = new LoggingService(_mockCloudWatchClient.Object, LogGroupName, _mockLogStreamService.Object);
 
-        await service.LogMessageAsync(serializedMessageData);
+        await service.LogMessageAsync(jsonMessageData);
 
-        mockCloudWatchClient.Verify(m => m.PutLogEventsAsync(It.IsAny<PutLogEventsRequest>(), default), Times.Once);
+        _mockCloudWatchClient.Verify(client => client.PutLogEventsAsync(It.IsAny<PutLogEventsRequest>(), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task LogMessageAsync_ShouldRetry_WhenInvalidSequenceTokenExceptionThrown()
+    {
+        var messageData = new MessageData { Prefix = "prefix", DateTimeFormat = "daily" };
+        var jsonMessageData = JsonConvert.SerializeObject(messageData);
+
+        _mockLogStreamService.Setup(m => m.CreateLogStreamAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync("logStreamName");
+
+        _mockCloudWatchClient.SetupSequence(client => client.PutLogEventsAsync(It.IsAny<PutLogEventsRequest>(), default))
+            .ThrowsAsync(new InvalidSequenceTokenException("ExpectedSequenceToken"))
+            .ReturnsAsync(new PutLogEventsResponse { NextSequenceToken = "NewSequenceToken" });
+
+        var service = new LoggingService(_mockCloudWatchClient.Object, LogGroupName, _mockLogStreamService.Object);
+
+        var act = async () => await service.LogMessageAsync(jsonMessageData);
+
+        await act.Should().NotThrowAsync<InvalidSequenceTokenException>();
+        _mockCloudWatchClient.Verify(client => client.PutLogEventsAsync(It.IsAny<PutLogEventsRequest>(), default), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task LogMessageAsync_ShouldUpdateSequenceToken_AfterSuccessfulPut()
+    {
+        var messageData = new MessageData { Prefix = "prefix", DateTimeFormat = "daily" };
+        var jsonMessageData = JsonConvert.SerializeObject(messageData);
+
+        _mockLogStreamService.Setup(m => m.CreateLogStreamAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ReturnsAsync("logStreamName");
+
+        const string newSequenceToken = "NewSequenceToken";
+        _mockCloudWatchClient.Setup(client => client.PutLogEventsAsync(It.IsAny<PutLogEventsRequest>(), default))
+            .ReturnsAsync(new PutLogEventsResponse { NextSequenceToken = newSequenceToken });
+
+        var service = new LoggingService(_mockCloudWatchClient.Object, LogGroupName, _mockLogStreamService.Object);
+
+        await service.LogMessageAsync(jsonMessageData);
+
+        var sequenceTokenField = service.GetType().GetField("_sequenceToken", BindingFlags.NonPublic | BindingFlags.Instance);
+        var sequenceTokenValue = sequenceTokenField?.GetValue(service);
+
+        sequenceTokenValue.Should().Be(newSequenceToken);
     }
 
 }
