@@ -88,5 +88,4 @@ public class LoggingServiceTests
 
         sequenceTokenValue.Should().Be(newSequenceToken);
     }
-
 }

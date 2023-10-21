@@ -13,15 +13,7 @@ public class LogStreamManager : ILogStreamManager
 
     private LogStreamManager() { }
 
-    public static void ResetInstanceForTesting()
-    {
-        // TODO: Reset LazyInstance, or provide another way to reset the singleton
-    }
-
-    public void UpdateLogStream(string? logStreamName)
-    {
-        CurrentLogStreamName = logStreamName;
-    }
+    public void UpdateLogStream(string? logStreamName) => CurrentLogStreamName = logStreamName;
 
     public bool ShouldCreateNewStream()
     {
@@ -30,10 +22,7 @@ public class LogStreamManager : ILogStreamManager
 
         var match = Regex.Match(CurrentLogStreamName, @"\d{4}-\d{2}-\d{2}(-\d{2})?");
         if (!match.Success)
-        {
-            // Handle invalid date format in stream name
             return true;
-        }
 
         var dateString = match.Value;
         DateTime lastStreamDate;
@@ -50,11 +39,10 @@ public class LogStreamManager : ILogStreamManager
             }
             catch
             {
-                return true; // If parsing fails, create a new stream
+                return true;
             }
         }
 
-        // Your logic to determine if a new stream should be created
         return lastStreamDate.Date != DateTime.UtcNow.Date;
     }
 }
