@@ -12,6 +12,7 @@ public class LogStreamServiceTests
 {
     private readonly Mock<IAmazonCloudWatchLogs> _mockClient;
     private const string LogGroupName = "logGroupName";
+    private const string DateTimeFormat = "yyyy-MM-dd";
     private readonly LogStreamService _service;
 
     public LogStreamServiceTests()
@@ -30,7 +31,7 @@ public class LogStreamServiceTests
 
         await service.CreateLogStreamAsync("prefix", "daily");
 
-        mockLogStreamManager.Verify(manager => manager.ShouldCreateNewStream(), Times.Once);
+        mockLogStreamManager.Verify(manager => manager.ShouldCreateNewStream(DateTimeFormat), Times.Once);
     }
 
     [Fact]
@@ -38,7 +39,7 @@ public class LogStreamServiceTests
     {
         var mockClient = new Mock<IAmazonCloudWatchLogs>();
         var mockLogStreamManager = new Mock<ILogStreamManager>();
-        mockLogStreamManager.Setup(m => m.ShouldCreateNewStream()).Returns(true);
+        mockLogStreamManager.Setup(m => m.ShouldCreateNewStream(DateTimeFormat)).Returns(true);
         var service = new LogStreamService(mockClient.Object, LogGroupName, mockLogStreamManager.Object);
 
         var result = await service.CreateLogStreamAsync("prefix", "daily");
@@ -52,7 +53,7 @@ public class LogStreamServiceTests
     {
         var mockClient = new Mock<IAmazonCloudWatchLogs>();
         var mockLogStreamManager = new Mock<ILogStreamManager>();
-        mockLogStreamManager.Setup(m => m.ShouldCreateNewStream()).Returns(false);
+        mockLogStreamManager.Setup(m => m.ShouldCreateNewStream(DateTimeFormat)).Returns(false);
         var service = new LogStreamService(mockClient.Object, LogGroupName, mockLogStreamManager.Object);
 
         var result = await service.CreateLogStreamAsync("prefix", "daily");

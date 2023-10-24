@@ -3,11 +3,15 @@ using FluentAssertions;
 using Xunit;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace Net.Utils.CloudWatchHandler.Tests.Helpers;
 
 public class LogStreamManagerTests
 {
+    private readonly LogStreamManager _logStreamManager = LogStreamManager.Instance;
+    private const string DateTimeFormat = "yyyy-MM-dd-HH";
+
     [Fact]
     public void Instance_ShouldReturnSameInstance()
     {
@@ -24,7 +28,7 @@ public class LogStreamManagerTests
 
         LogStreamManager.Instance.UpdateLogStream(logStreamName);
 
-        LogStreamManager.Instance.CurrentLogStreamName.Should().Be(logStreamName);
+        LogStreamManager.Instance.CurrentLogStreamData.Should().BeNull();
     }
 
     [Fact]
@@ -33,7 +37,7 @@ public class LogStreamManagerTests
         var logStreamName = $"MyPrefix-{DateTime.UtcNow:yyyy-MM-dd-HH}";
         LogStreamManager.Instance.UpdateLogStream(logStreamName);
 
-        var result = LogStreamManager.Instance.ShouldCreateNewStream();
+        var result = LogStreamManager.Instance.ShouldCreateNewStream(DateTimeFormat);
 
         result.Should().BeFalse();
     }
@@ -44,7 +48,7 @@ public class LogStreamManagerTests
         var logStreamName = $"MyPrefix-{DateTime.UtcNow:yyyy-MM-dd}";
         LogStreamManager.Instance.UpdateLogStream(logStreamName);
 
-        var result = LogStreamManager.Instance.ShouldCreateNewStream();
+        var result = LogStreamManager.Instance.ShouldCreateNewStream("yyyy-MM-dd");
 
         result.Should().BeFalse();
     }
@@ -54,7 +58,7 @@ public class LogStreamManagerTests
     {
         LogStreamManager.Instance.UpdateLogStream("InvalidFormat");
 
-        var result = LogStreamManager.Instance.ShouldCreateNewStream();
+        var result = LogStreamManager.Instance.ShouldCreateNewStream(DateTimeFormat);
 
         result.Should().BeTrue();
     }
@@ -64,7 +68,7 @@ public class LogStreamManagerTests
     {
         LogStreamManager.Instance.UpdateLogStream(null);
 
-        var result = LogStreamManager.Instance.ShouldCreateNewStream();
+        var result = LogStreamManager.Instance.ShouldCreateNewStream(DateTimeFormat);
 
         result.Should().BeTrue();
     }
@@ -113,15 +117,107 @@ public class LogStreamManagerTests
     }
 
     [Theory]
-    [InlineData("InvalidPrefix-Date-2022-11-11")]
-    [InlineData("OnlyPrefix")]
-    [InlineData("OnlyDate-2022-11-11")]
-    public void ShouldCreateNewStream_InvalidLogStreamNameFormats_ShouldReturnTrue(string logStreamName)
+    [InlineData("InvalidPrefix-Date-2022-11-11", "yyyy-MM-dd", true)]
+    [InlineData("OnlyPrefix", "yyyy-MM-dd", true)]
+    [InlineData("OnlyDate-2022-11-11", "yyyy-MM-dd-HH", true)]
+    public void Should_Create_New_Stream_When_Invalid_Format(string logStreamName, string dateTimeFormat, bool expectedResult)
     {
         LogStreamManager.Instance.UpdateLogStream(logStreamName);
 
-        var result = LogStreamManager.Instance.ShouldCreateNewStream();
+        var result = LogStreamManager.Instance.ShouldCreateNewStream(dateTimeFormat);
+
+        result.Should().Be(expectedResult);
+    }
+
+    [Fact]
+    public void Should_Create_New_Stream_When_Stream_Name_Is_Null()
+    {
+        var logStreamManager = LogStreamManager.Instance;
+        logStreamManager.UpdateLogStream(null);
+
+        var result = logStreamManager.ShouldCreateNewStream("yyyy-MM-dd");
 
         result.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("TRE-2023-10-23", "yyyy-MM-dd", true)]
+    [InlineData("TRE-2023-10-24", "yyyy-MM-dd", false)]
+    [InlineData("TRE-2023-10-22", "yyyy-MM-dd", true)]
+    [InlineData("TRE-2023-10-23-16", "yyyy-MM-dd-HH", true)]
+    [InlineData("TRE-2023-10-23-15", "yyyy-MM-dd-HH", true)]
+    [InlineData("TRE-2023-10-24-07", "yyyy-MM-dd-HH", true)]
+    public void ShouldCreateNewStream_ShouldReturnExpectedResult(string currentLogStreamName, string dateTimeFormat, bool expectedResult)
+    {
+        _logStreamManager.UpdateLogStream(currentLogStreamName);
+
+        var shouldCreateNewStream = _logStreamManager.ShouldCreateNewStream(dateTimeFormat);
+
+        shouldCreateNewStream.Should().Be(expectedResult);
+    }
+
+    [Theory]
+    [InlineData("Prefix-2023-10-24", "yyyy-MM-dd", false)]
+    [InlineData("Prefix-2023-10-23-12", "yyyy-MM-dd-HH", true)]
+    [InlineData("Prefix-2023-10-23-12-30", "yyyy-MM-dd-HH-mm", true)]
+    public void Should_Parse_DateTime_Correctly(string logStreamName, string format, bool expected)
+    {
+        var logStreamManager = LogStreamManager.Instance;
+        logStreamManager.UpdateLogStream(logStreamName);
+
+        var result = logStreamManager.ShouldCreateNewStream(format);
+
+        result.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("Prefix-2023-13-23", "yyyy-MM-dd")] // Invalid month
+    [InlineData("Prefix-2023-10-32", "yyyy-MM-dd")] // Invalid day
+    [InlineData("Prefix-2023-10-23-25", "yyyy-MM-dd-HH")] // Invalid hour
+    public void Should_Create_New_Stream_When_Invalid_DateTime_Format(string logStreamName, string format)
+    {
+        var logStreamManager = LogStreamManager.Instance;
+        logStreamManager.UpdateLogStream(logStreamName);
+
+        var result = logStreamManager.ShouldCreateNewStream(format);
+
+        result.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("Prefix-2023-10-23", "yyyy/MM/dd")]
+    [InlineData("Prefix-2023-10-23-12", "yyyy-MM-DD-HH")]
+    public void Should_Create_New_Stream_When_Mismatched_Or_Invalid_Format(string logStreamName, string format)
+    {
+        var logStreamManager = LogStreamManager.Instance;
+        logStreamManager.UpdateLogStream(logStreamName);
+
+        var result = logStreamManager.ShouldCreateNewStream(format);
+
+        result.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("yyyy-MM-dd", @"\d{4}-\d{2}-\d{2}")]
+    [InlineData("yyyy-MM-dd-HH", @"\d{4}-\d{2}-\d{2}-\d{1,2}")]
+    [InlineData("yyyy-MM", @"\d{4}-\d{2}")]
+    public void BuildRegexPatternFromFormat_ShouldGenerateCorrectPattern(string inputFormat, string expectedPattern)
+    {
+        var result = LogStreamManager.BuildRegexPatternFromFormat(inputFormat);
+
+        result.Should().Be(expectedPattern);
+    }
+
+    [Theory]
+    [InlineData("2023-10-24", "yyyy-MM-dd")]
+    [InlineData("2023-10-24 12", "yyyy-MM-dd HH")]
+    [InlineData("2023-10", "yyyy-MM")]
+    public void GenerateHashForDateTime_ShouldGenerateCorrectString(string expected, string format)
+    {
+        var dateTime = DateTime.ParseExact(expected, format, CultureInfo.InvariantCulture);
+
+        var result = LogStreamManager.GenerateHashForDateTime(dateTime, format);
+
+        result.Should().Be(expected);
     }
 }

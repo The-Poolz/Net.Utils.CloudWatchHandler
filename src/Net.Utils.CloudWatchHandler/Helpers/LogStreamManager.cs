@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace Net.Utils.CloudWatchHandler.Helpers;
@@ -23,13 +24,11 @@ public class LogStreamManager : ILogStreamManager
             return true;
 
         DateTime lastStreamDate;
-        var currentUtcDate = DateTime.UtcNow;
 
         try
         {
-            var regex = BuildRegexPatternFromFormat(dateTimeFormat);
-            var regexPattern = new Regex(regex, RegexOptions.None, TimeSpan.FromMilliseconds(50));
-            var match = regexPattern.Match(CurrentLogStreamData);
+            var regex = new Regex(BuildRegexPatternFromFormat(dateTimeFormat), RegexOptions.None, TimeSpan.FromMilliseconds(50));
+            var match = regex.Match(CurrentLogStreamData);
             if (!match.Success) return true;
 
             var dateString = match.Value;
@@ -41,12 +40,12 @@ public class LogStreamManager : ILogStreamManager
         }
 
         var lastHash = GenerateHashForDateTime(lastStreamDate, dateTimeFormat);
-        var currentHash = GenerateHashForDateTime(currentUtcDate, dateTimeFormat);
+        var currentHash = GenerateHashForDateTime(DateTime.UtcNow, dateTimeFormat);
 
         return !lastHash.Equals(currentHash);
     }
 
-    private static string BuildRegexPatternFromFormat(string? dateTimeFormat)
+    public static string BuildRegexPatternFromFormat(string? dateTimeFormat)
     {
         return dateTimeFormat!
             .Replace("yyyy", @"\d{4}")
@@ -56,5 +55,5 @@ public class LogStreamManager : ILogStreamManager
             .Replace("mm", @"\d{1,2}");
     }
 
-    private static string GenerateHashForDateTime(DateTime dateTime, string? format) => dateTime.ToString(format);
+    public static string GenerateHashForDateTime(DateTime dateTime, string? format) => dateTime.ToString(format);
 }

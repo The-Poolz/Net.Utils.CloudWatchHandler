@@ -19,8 +19,8 @@ public class LogStreamService : ILogStreamService
 
     public virtual async Task<string?> CreateLogStreamAsync(string? prefix, string? dateTimeFormat)
     {
-        if (!_logStreamManager.ShouldCreateNewStream())
-            return _logStreamManager.CurrentLogStreamName;
+        if (!_logStreamManager.ShouldCreateNewStream(dateTimeFormat))
+            return _logStreamManager.CurrentLogStreamData;
 
         var logStreamName = GenerateLogStreamName(prefix, dateTimeFormat);
 
