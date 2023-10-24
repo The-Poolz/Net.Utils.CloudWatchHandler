@@ -2,7 +2,7 @@
 
 public interface ILogStreamManager
 {
-    string? CurrentLogStreamName { get; }
-    bool ShouldCreateNewStream();
-    void UpdateLogStream(string? logStreamName);
+    string? CurrentLogStreamData { get; }
+    bool ShouldCreateNewStream(string? dateTimeFormat);
+    void UpdateLogStream(string? fullLogStreamName);
 }

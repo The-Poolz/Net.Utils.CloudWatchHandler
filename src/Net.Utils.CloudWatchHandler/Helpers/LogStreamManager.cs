@@ -9,42 +9,52 @@ public class LogStreamManager : ILogStreamManager
 
     public static LogStreamManager Instance => LazyInstance.Value;
 
-    public string? CurrentLogStreamName { get; private set; }
+    public string? CurrentLogStreamData { get; private set; }
 
-    private LogStreamManager() { }
-
-    public void UpdateLogStream(string? logStreamName) => CurrentLogStreamName = logStreamName;
-
-    public bool ShouldCreateNewStream()
+    public void UpdateLogStream(string? fullLogStreamName)
     {
-        if (string.IsNullOrEmpty(CurrentLogStreamName))
+        var indexOfHyphen = fullLogStreamName?.IndexOf('-') ?? -1;
+        CurrentLogStreamData = indexOfHyphen < 0 ? null : fullLogStreamName?[(indexOfHyphen + 1)..];
+    }
+
+    public bool ShouldCreateNewStream(string? dateTimeFormat)
+    {
+        if (string.IsNullOrEmpty(CurrentLogStreamData))
             return true;
 
-        var regexPattern = new Regex(@"\d{4}-\d{2}-\d{2}(-\d{2})?", RegexOptions.None, TimeSpan.FromMilliseconds(50));
-
-        var match = regexPattern.Match(CurrentLogStreamName);
-        if (!match.Success)
-            return true;
-
-        var dateString = match.Value;
         DateTime lastStreamDate;
+        var currentUtcDate = DateTime.UtcNow;
 
         try
         {
-            lastStreamDate = DateTime.ParseExact(dateString, "yyyy-MM-dd-HH", CultureInfo.InvariantCulture);
+            var regex = BuildRegexPatternFromFormat(dateTimeFormat);
+            var regexPattern = new Regex(regex, RegexOptions.None, TimeSpan.FromMilliseconds(50));
+            var match = regexPattern.Match(CurrentLogStreamData);
+            if (!match.Success) return true;
+
+            var dateString = match.Value;
+            lastStreamDate = DateTime.ParseExact(dateString, dateTimeFormat ?? throw new ArgumentNullException(nameof(dateTimeFormat)), CultureInfo.InvariantCulture);
         }
-        catch (FormatException)
+        catch (Exception)
         {
-            try
-            {
-                lastStreamDate = DateTime.ParseExact(dateString, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-            }
-            catch
-            {
-                return true;
-            }
+            return true;
         }
 
-        return lastStreamDate.Date != DateTime.UtcNow.Date;
+        var lastHash = GenerateHashForDateTime(lastStreamDate, dateTimeFormat);
+        var currentHash = GenerateHashForDateTime(currentUtcDate, dateTimeFormat);
+
+        return !lastHash.Equals(currentHash);
     }
+
+    private static string BuildRegexPatternFromFormat(string? dateTimeFormat)
+    {
+        return dateTimeFormat!
+            .Replace("yyyy", @"\d{4}")
+            .Replace("MM", @"\d{2}")
+            .Replace("dd", @"\d{2}")
+            .Replace("HH", @"\d{1,2}")
+            .Replace("mm", @"\d{1,2}");
+    }
+
+    private static string GenerateHashForDateTime(DateTime dateTime, string? format) => dateTime.ToString(format);
 }
