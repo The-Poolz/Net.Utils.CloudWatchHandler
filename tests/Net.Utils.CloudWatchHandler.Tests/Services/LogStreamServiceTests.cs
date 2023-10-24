@@ -10,101 +10,87 @@ namespace Net.Utils.CloudWatchHandler.Tests.Services;
 
 public class LogStreamServiceTests
 {
-    private readonly Mock<IAmazonCloudWatchLogs> _mockClient;
     private const string LogGroupName = "logGroupName";
     private const string DateTimeFormat = "yyyy-MM-dd";
-    private readonly LogStreamService _service;
+
+    private readonly Mock<IAmazonCloudWatchLogs> _mockClient;
+    private readonly Mock<ILogStreamManager> _mockLogStreamManager;
+    private readonly LogStreamService _logStreamService;
 
     public LogStreamServiceTests()
     {
         _mockClient = new Mock<IAmazonCloudWatchLogs>();
-        var mockLogStreamManager = new Mock<ILogStreamManager>();
-        _service = new LogStreamService(_mockClient.Object, LogGroupName, mockLogStreamManager.Object);
+        _mockLogStreamManager = new Mock<ILogStreamManager>();
+        _logStreamService = new LogStreamService(_mockClient.Object, LogGroupName, _mockLogStreamManager.Object);
     }
 
     [Fact]
     public async Task CreateLogStreamAsync_ShouldCall_ShouldCreateNewStream()
     {
-        var mockClient = new Mock<IAmazonCloudWatchLogs>();
-        var mockLogStreamManager = new Mock<ILogStreamManager>();
-        var service = new LogStreamService(mockClient.Object, LogGroupName, mockLogStreamManager.Object);
+        await _logStreamService.CreateLogStreamAsync("prefix", DateTimeFormat);
 
-        await service.CreateLogStreamAsync("prefix", "daily");
-
-        mockLogStreamManager.Verify(manager => manager.ShouldCreateNewStream(DateTimeFormat), Times.Once);
+        _mockLogStreamManager.Verify(manager => manager.ShouldCreateNewStream(DateTimeFormat), Times.Once);
     }
 
     [Fact]
     public async Task CreateLogStreamAsync_ShouldCreateNewStream_WhenRequired()
     {
-        var mockClient = new Mock<IAmazonCloudWatchLogs>();
-        var mockLogStreamManager = new Mock<ILogStreamManager>();
-        mockLogStreamManager.Setup(m => m.ShouldCreateNewStream(DateTimeFormat)).Returns(true);
-        var service = new LogStreamService(mockClient.Object, LogGroupName, mockLogStreamManager.Object);
+        _mockLogStreamManager.Setup(m => m.ShouldCreateNewStream(DateTimeFormat)).Returns(true);
+        var service = new LogStreamService(_mockClient.Object, LogGroupName, _mockLogStreamManager.Object);
 
-        var result = await service.CreateLogStreamAsync("prefix", "daily");
+        var result = await service.CreateLogStreamAsync("prefix", DateTimeFormat);
 
         result.Should().NotBeNullOrEmpty();
-        mockClient.Verify(client => client.CreateLogStreamAsync(It.IsAny<CreateLogStreamRequest>(), default), Times.Once);
+        _mockClient.Verify(client => client.CreateLogStreamAsync(It.IsAny<CreateLogStreamRequest>(), default), Times.Once);
     }
 
-    [Fact]
-    public async Task CreateLogStreamAsync_ShouldNotCreateNewStream_WhenNotRequired()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("12-23-yy")]
+    public async Task CreateLogStreamAsync_ShouldReturnNull_IfDateTimeFormatIsNullOrEmpty(string dateTimeFormat)
     {
-        var mockClient = new Mock<IAmazonCloudWatchLogs>();
-        var mockLogStreamManager = new Mock<ILogStreamManager>();
-        mockLogStreamManager.Setup(m => m.ShouldCreateNewStream(DateTimeFormat)).Returns(false);
-        var service = new LogStreamService(mockClient.Object, LogGroupName, mockLogStreamManager.Object);
+        _mockLogStreamManager.Setup(m => m.ShouldCreateNewStream(DateTimeFormat)).Returns(true);
 
-        var result = await service.CreateLogStreamAsync("prefix", "daily");
+        var result = await _logStreamService.CreateLogStreamAsync("prefix", dateTimeFormat);
 
         result.Should().BeNull();
-        mockClient.Verify(client => client.CreateLogStreamAsync(It.IsAny<CreateLogStreamRequest>(), default), Times.Never);
     }
 
     [Fact]
-    public async Task LogStreamExistsAsync_ShouldReturnTrue_WhenLogStreamExists()
+    public async Task CreateLogStreamAsync_ShouldCreateNewStream_WhenDateTimeFormat_Wrong()
     {
-        _mockClient.Setup(client => client.DescribeLogStreamsAsync(It.IsAny<DescribeLogStreamsRequest>(), default))
-            .ReturnsAsync(new DescribeLogStreamsResponse
-            {
-                LogStreams = new List<LogStream> { new LogStream() }
-            });
+        _mockLogStreamManager.Setup(m => m.ShouldCreateNewStream(DateTimeFormat)).Returns(true);
+        var service = new LogStreamService(_mockClient.Object, LogGroupName, _mockLogStreamManager.Object);
 
-        var result = await _service.LogStreamExistsAsync("existingLogStream");
+        var result = await service.CreateLogStreamAsync("prefix", string.Empty);
 
-        result.Should().BeTrue();
+        result.Should().BeNull();
+        _mockClient.Verify(client => client.CreateLogStreamAsync(It.IsAny<CreateLogStreamRequest>(), default), Times.Never);
     }
 
     [Fact]
-    public async Task LogStreamExistsAsync_ShouldReturnFalse_WhenLogStreamDoesNotExist()
+    public async Task CreateLogStreamAsync_ShouldReturnCurrentLogStreamData_IfShouldNotCreateNewStream()
     {
-        _mockClient.Setup(client => client.DescribeLogStreamsAsync(It.IsAny<DescribeLogStreamsRequest>(), default))
-            .ReturnsAsync(new DescribeLogStreamsResponse
-            {
-                LogStreams = new List<LogStream>()
-            });
+        const string currentLogStreamData = "currentLogStreamData";
+        _mockLogStreamManager.Setup(x => x.ShouldCreateNewStream(It.IsAny<string>())).Returns(false);
+        _mockLogStreamManager.Setup(x => x.CurrentLogStreamData).Returns(currentLogStreamData);
 
-        var result = await _service.LogStreamExistsAsync("nonExistingLogStream");
+        var result = await _logStreamService.CreateLogStreamAsync("prefix", "dateTimeFormat");
 
-        result.Should().BeFalse();
+        result.Should().Be(currentLogStreamData);
     }
 
     [Fact]
-    public void GenerateLogStreamName_ShouldReturnCorrectlyFormattedName_WhenGivenFrequency()
+    public async Task CreateLogStreamAsync_ShouldCreateNewLogStream_IfShouldCreateNewStream()
     {
-        var result = LogStreamService.GenerateLogStreamName("prefix", "daily");
+        const string newLogStreamName = "prefix-2023-10-24";
+        _mockLogStreamManager.Setup(x => x.ShouldCreateNewStream(It.IsAny<string>())).Returns(true);
+        _mockLogStreamManager.Setup(x => x.UpdateLogStream(It.IsAny<string>()));
 
-        result.Should().StartWith("prefix-");
-        result.Should().EndWith(DateTime.UtcNow.ToString("yyyy-MM-dd"));
-    }
+        var result = await _logStreamService.CreateLogStreamAsync("prefix", DateTimeFormat);
 
-    [Fact]
-    public void GenerateLogStreamName_ShouldReturnCorrectlyFormattedName_WhenGivenHourlyFrequency()
-    {
-        var result = LogStreamService.GenerateLogStreamName("prefix", "hourly");
-
-        result.Should().StartWith("prefix-");
-        result.Should().EndWith(DateTime.UtcNow.ToString("yyyy-MM-dd-HH"));
+        result.Should().Be(LogStreamService.GenerateLogStreamName("prefix", DateTimeFormat));
+        _mockLogStreamManager.Verify(x => x.UpdateLogStream(It.Is<string>(s => s == newLogStreamName)), Times.Once);
     }
 }

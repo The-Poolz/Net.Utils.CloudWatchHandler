@@ -22,38 +22,16 @@ public class LogStreamService : ILogStreamService
         if (!_logStreamManager.ShouldCreateNewStream(dateTimeFormat))
             return _logStreamManager.CurrentLogStreamData;
 
-        var logStreamName = GenerateLogStreamName(prefix, dateTimeFormat);
+        var fullLogStreamName = GenerateLogStreamName(prefix, dateTimeFormat);
 
-        await TryCreateLogStreamAsync(new CreateLogStreamRequest(_logGroupName, logStreamName));
+        await TryCreateLogStreamAsync(new CreateLogStreamRequest(_logGroupName, fullLogStreamName));
 
-        _logStreamManager.UpdateLogStream(logStreamName);
+        _logStreamManager.UpdateLogStream(fullLogStreamName);
 
-        return logStreamName;
+        return fullLogStreamName;
     }
 
-    public virtual async Task<bool> LogStreamExistsAsync(string logStreamName)
-    {
-        var response = await _client.DescribeLogStreamsAsync(new DescribeLogStreamsRequest
-        {
-            LogGroupName = _logGroupName,
-            LogStreamNamePrefix = logStreamName
-        });
-
-        return response.LogStreams.Count > 0;
-    }
-
-    public static string GenerateLogStreamName(string? prefix, string? frequency)
-    {
-        Console.WriteLine("frequency = " + frequency);
-        var dateTimeFormat = frequency?.ToLower() switch
-        {
-            "daily" => "yyyy-MM-dd",
-            "hourly" => "yyyy-MM-dd-HH",
-            _ => "yyyy-MM-dd"
-        };
-
-        return $"{prefix}-{DateTime.UtcNow.ToString(dateTimeFormat)}";
-    }
+    public static string GenerateLogStreamName(string? prefix, string? dateTimeFormat) => $"{prefix}-{DateTime.UtcNow.ToString(dateTimeFormat)}";
 
     private async Task TryCreateLogStreamAsync(CreateLogStreamRequest request)
     {
