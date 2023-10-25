@@ -25,7 +25,9 @@ public class LoggingServiceTests
     [Fact]
     public async Task LogMessageAsync_ShouldCall_PutLogEventsAsync()
     {
-        var messageData = new MessageData { Prefix = "prefix", DateTimeFormat = "daily", Message = "Our Message" };
+        var messageDetails = new MessageDetails { ErrorLevel = "ErrorLevel", Message = "Message", ApplicationName = "ApplicationName" };
+        var messageData = new MessageData { Prefix = "prefix", DateTimeFormat = "daily", LogGroupName = LogGroupName, MessageDetails = messageDetails };
+
         var jsonMessageData = JsonConvert.SerializeObject(messageData);
 
         _mockLogStreamService.Setup(m => m.CreateLogStreamAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync("logStreamName");

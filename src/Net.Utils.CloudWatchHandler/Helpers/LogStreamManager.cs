@@ -14,7 +14,9 @@ public class LogStreamManager : ILogStreamManager
     public void UpdateLogStream(string? fullLogStreamName)
     {
         var indexOfHyphen = fullLogStreamName?.IndexOf('-') ?? -1;
-        CurrentLogStreamData = indexOfHyphen < 0 ? null : fullLogStreamName?[(indexOfHyphen + 1)..];
+        if (indexOfHyphen < 0)
+            CurrentLogStreamData = null;
+        else if (fullLogStreamName != null) CurrentLogStreamData = fullLogStreamName[(indexOfHyphen + 1)..];
     }
 
     public bool ShouldCreateNewStream(string? dateTimeFormat)

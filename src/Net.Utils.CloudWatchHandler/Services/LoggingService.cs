@@ -2,7 +2,6 @@
 using Amazon.CloudWatchLogs.Model;
 using Net.Utils.CloudWatchHandler.Models;
 using Newtonsoft.Json;
-using InvalidOperationException = System.InvalidOperationException;
 
 namespace Net.Utils.CloudWatchHandler.Services;
 
@@ -20,22 +19,20 @@ public class LoggingService
         _logStreamService = logStreamService ?? throw new ArgumentNullException(nameof(logStreamService));
     }
 
-    public async Task LogMessageAsync(string? messageData)
+    public async Task LogMessageAsync(string? messageDataJson)
     {
-        var deserializedMessageData = JsonConvert.DeserializeObject<MessageData>(messageData ?? string.Empty) ?? throw new InvalidOperationException();
-        var prefix = deserializedMessageData.Prefix;
-        var dateTimeFormat = deserializedMessageData.DateTimeFormat;
+        var messageData = JsonConvert.DeserializeObject<MessageData>(messageDataJson ?? string.Empty) ?? throw new System.InvalidOperationException();
 
         var logEvent = new InputLogEvent
         {
             Timestamp = DateTime.UtcNow,
-            Message = messageData
+            Message = JsonConvert.SerializeObject(messageData.MessageDetails)
         };
 
         var request = new PutLogEventsRequest
         {
             LogGroupName = _logGroupName,
-            LogStreamName = await _logStreamService.CreateLogStreamAsync(prefix, dateTimeFormat),
+            LogStreamName = await _logStreamService.CreateLogStreamAsync(messageData.Prefix, messageData.DateTimeFormat),
             LogEvents = new List<InputLogEvent> { logEvent },
             SequenceToken = _sequenceToken
         };
@@ -48,7 +45,7 @@ public class LoggingService
         catch (InvalidSequenceTokenException ex)
         {
             _sequenceToken = ex.ExpectedSequenceToken;
-            await LogMessageAsync(messageData);
+            await LogMessageAsync(messageDataJson);
         }
     }
 }
