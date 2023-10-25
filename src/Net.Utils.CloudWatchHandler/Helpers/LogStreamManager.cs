@@ -1,60 +1,26 @@
-﻿using System.Globalization;
-using System.Text.RegularExpressions;
+﻿namespace Net.Utils.CloudWatchHandler.Helpers;
 
-namespace Net.Utils.CloudWatchHandler.Helpers;
-
-public class LogStreamManager : ILogStreamManager
+public class LogStreamManager
 {
     private static readonly Lazy<LogStreamManager> LazyInstance = new(() => new LogStreamManager());
 
     public static LogStreamManager Instance => LazyInstance.Value;
 
-    public string? CurrentLogStreamData { get; private set; }
+    public string? CurrentLogStreamName { get; private set; }
+    public DateTime LastStreamDate { get; private set; }
 
-    public void UpdateLogStream(string? fullLogStreamName)
+    public virtual bool ShouldCreateNewStream(int streamCreationIntervalInMinutes)
     {
-        var indexOfHyphen = fullLogStreamName?.IndexOf('-') ?? -1;
-        if (indexOfHyphen < 0)
-            CurrentLogStreamData = null;
-        else if (fullLogStreamName != null) CurrentLogStreamData = fullLogStreamName[(indexOfHyphen + 1)..];
-    }
-
-    public bool ShouldCreateNewStream(string? dateTimeFormat)
-    {
-        if (string.IsNullOrEmpty(CurrentLogStreamData))
+        if (string.IsNullOrEmpty(CurrentLogStreamName))
             return true;
 
-        DateTime lastStreamDate;
+        var timeSinceLastStreamInMinutes = (DateTime.UtcNow - LastStreamDate).TotalMinutes;
 
-        try
-        {
-            var regex = new Regex(BuildRegexPatternFromFormat(dateTimeFormat), RegexOptions.None, TimeSpan.FromMilliseconds(50));
-            var match = regex.Match(CurrentLogStreamData);
-            if (!match.Success) return true;
-
-            var dateString = match.Value;
-            lastStreamDate = DateTime.ParseExact(dateString, dateTimeFormat ?? throw new ArgumentNullException(nameof(dateTimeFormat)), CultureInfo.InvariantCulture);
-        }
-        catch (Exception)
-        {
-            return true;
-        }
-
-        var lastHash = GenerateHashForDateTime(lastStreamDate, dateTimeFormat);
-        var currentHash = GenerateHashForDateTime(DateTime.UtcNow, dateTimeFormat);
-
-        return !lastHash.Equals(currentHash);
+        return timeSinceLastStreamInMinutes >= streamCreationIntervalInMinutes;
     }
-
-    public static string BuildRegexPatternFromFormat(string? dateTimeFormat)
+    public virtual void UpdateStreamData(string newLogStreamName)
     {
-        return dateTimeFormat!
-            .Replace("yyyy", @"\d{4}")
-            .Replace("MM", @"\d{2}")
-            .Replace("dd", @"\d{2}")
-            .Replace("HH", @"\d{1,2}")
-            .Replace("mm", @"\d{1,2}");
+        CurrentLogStreamName = newLogStreamName;
+        LastStreamDate = DateTime.UtcNow;
     }
-
-    public static string GenerateHashForDateTime(DateTime dateTime, string? format) => dateTime.ToString(format);
 }
