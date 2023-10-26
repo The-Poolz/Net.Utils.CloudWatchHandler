@@ -6,7 +6,7 @@ public class LogStreamManager
 
     public static LogStreamManager Instance => LazyInstance.Value;
 
-    public string? CurrentLogStreamName { get; private set; }
+    public virtual string? CurrentLogStreamName { get; private set; }
     public virtual DateTime LastStreamDate { get; private set; }
 
     public virtual void UpdateStreamData(string newLogStreamName)
@@ -24,5 +24,4 @@ public class LogStreamManager
 
         return timeSinceLastStreamInMinutes >= streamCreationIntervalInMinutes;
     }
-   
 }
