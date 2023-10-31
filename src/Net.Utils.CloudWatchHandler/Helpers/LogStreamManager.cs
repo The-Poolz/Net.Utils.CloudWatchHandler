@@ -20,7 +20,7 @@ public class LogStreamManager
         if (string.IsNullOrEmpty(CurrentLogStreamName))
             return true;
 
-        var timeSinceLastStreamInMinutes = (DateTime.UtcNow - LastStreamDate).TotalMinutes;
+        var timeSinceLastStreamInMinutes = (int)Math.Round((DateTime.UtcNow - LastStreamDate).TotalMinutes);
 
         return timeSinceLastStreamInMinutes >= streamCreationIntervalInMinutes;
     }
