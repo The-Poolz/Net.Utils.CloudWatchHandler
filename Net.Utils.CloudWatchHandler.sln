@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net.Utils.CloudWatchHandler
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{E9414CF1-A5A2-448D-ABBA-C89FF6B1447F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Net.Utils.CloudWatchHandler.Tests", "tests\Net.Utils.CloudWatchHandler.Tests\Net.Utils.CloudWatchHandler.Tests.csproj", "{0EA793EB-847A-4639-A5B6-4B73E5228809}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net.Utils.CloudWatchHandler.Tests", "tests\Net.Utils.CloudWatchHandler.Tests\Net.Utils.CloudWatchHandler.Tests.csproj", "{0EA793EB-847A-4639-A5B6-4B73E5228809}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

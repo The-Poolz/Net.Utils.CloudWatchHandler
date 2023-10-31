@@ -1,37 +1,33 @@
 ﻿using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
-using Net.Utils.CloudWatchHandler.Utilities;
+using Net.Utils.CloudWatchHandler.Models;
 
 namespace Net.Utils.CloudWatchHandler.Services;
 
 public class LoggingService
 {
     private readonly IAmazonCloudWatchLogs _cloudWatchClient;
-    private readonly string _logGroupName;
     private readonly LogStreamService _logStreamService;
     private string? _sequenceToken;
 
-    public LoggingService(IAmazonCloudWatchLogs cloudWatchClient, string logGroupName, LogStreamService logStreamService)
+    public LoggingService(IAmazonCloudWatchLogs cloudWatchClient, LogStreamService logStreamService)
     {
         _cloudWatchClient = cloudWatchClient ?? throw new ArgumentNullException(nameof(cloudWatchClient));
-        _logGroupName = logGroupName ?? throw new ArgumentNullException(nameof(logGroupName));
         _logStreamService = logStreamService ?? throw new ArgumentNullException(nameof(logStreamService));
     }
 
-    public async Task LogMessageAsync(string messageData)
+    public virtual async Task LogMessageAsync(MessageData messageData)
     {
-        var formattedMessage = MessageFormatter.FormatExceptionMessage(messageData);
-
         var logEvent = new InputLogEvent
         {
             Timestamp = DateTime.UtcNow,
-            Message = formattedMessage
+            Message = messageData.MessageDetails.ToString()
         };
 
         var request = new PutLogEventsRequest
         {
-            LogGroupName = _logGroupName,
-            LogStreamName = await _logStreamService.CreateLogStreamAsync(),
+            LogGroupName = messageData.LogGroupName,
+            LogStreamName = await _logStreamService.CreateLogStreamAsync(messageData.Prefix, messageData.StreamCreationIntervalInMinutes, messageData.LogGroupName),
             LogEvents = new List<InputLogEvent> { logEvent },
             SequenceToken = _sequenceToken
         };

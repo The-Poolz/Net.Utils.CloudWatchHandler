@@ -42,6 +42,7 @@ Please refer to our documentation for detailed usage instructions and best pract
 
   <ItemGroup>
     <PackageReference Include="AWSSDK.CloudWatchLogs" Version="3.7.201.10" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
 </Project>

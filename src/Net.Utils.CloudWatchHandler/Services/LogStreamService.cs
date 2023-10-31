@@ -1,45 +1,43 @@
 ﻿using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
+using Net.Utils.CloudWatchHandler.Helpers;
 
 namespace Net.Utils.CloudWatchHandler.Services;
 
 public class LogStreamService
 {
     private readonly IAmazonCloudWatchLogs _client;
-    private readonly string _logGroupName;
+    private readonly LogStreamManager _logStreamManager;
 
-    public LogStreamService(IAmazonCloudWatchLogs client, string logGroupName)
+    public LogStreamService(IAmazonCloudWatchLogs client, LogStreamManager logStreamManager)
     {
         _client = client ?? throw new ArgumentNullException(nameof(client));
-        _logGroupName = logGroupName ?? throw new ArgumentNullException(nameof(logGroupName));
+        _logStreamManager = logStreamManager ?? throw new ArgumentNullException(nameof(logStreamManager));
     }
 
-    public virtual async Task<string> CreateLogStreamAsync(string? customLogStreamName = null!)
+    public virtual async Task<string?> CreateLogStreamAsync(string? prefix, int streamCreationIntervalInMinutes, string logGroupName)
     {
-        var logStreamName = customLogStreamName ?? GenerateLogStreamName();
-        await TryCreateLogStreamAsync(new CreateLogStreamRequest(_logGroupName, logStreamName));
+        if (!_logStreamManager.ShouldCreateNewStream(streamCreationIntervalInMinutes))
+            return _logStreamManager.CurrentLogStreamName;
+
+        var logStreamName = GenerateLogStreamName(prefix);
+
+        await TryCreateLogStreamAsync(new CreateLogStreamRequest(logGroupName, logStreamName));
+
+        _logStreamManager.UpdateStreamData(logStreamName);
+
         return logStreamName;
     }
 
-    public virtual async Task<bool> LogStreamExistsAsync(string logStreamName)
-    {
-        var response = await _client.DescribeLogStreamsAsync(new DescribeLogStreamsRequest
-        {
-            LogGroupName = _logGroupName,
-            LogStreamNamePrefix = logStreamName
-        });
+    public static string GenerateLogStreamName(string? prefix)
+        => $"{prefix}-{DateTime.UtcNow:yyyy-MM-ddTHH:mm}";
 
-        return response.LogStreams.Count > 0;
-    }
-
-    private static string GenerateLogStreamName() => $"LambdaSetStream-{DateTime.UtcNow:yyyy-MM-ddTHH-mm-ss}";
-
-    private async Task TryCreateLogStreamAsync(CreateLogStreamRequest request)
+    public virtual async Task TryCreateLogStreamAsync(CreateLogStreamRequest request)
     {
         await _client.CreateLogStreamAsync(request)
             .ContinueWith(task =>
             {
-                if (task.IsFaulted && task.Exception?.InnerExceptions.FirstOrDefault() is { } exception and not ResourceAlreadyExistsException)
+                if (task.IsFaulted && task.Exception?.InnerExceptions.FirstOrDefault() is { } exception && !(exception is ResourceAlreadyExistsException))
                     throw exception;
             });
     }
