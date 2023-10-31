@@ -1,6 +1,8 @@
 ﻿using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
 using Net.Utils.CloudWatchHandler.Models;
+using Newtonsoft.Json;
+using InvalidOperationException = System.InvalidOperationException;
 
 namespace Net.Utils.CloudWatchHandler.Services;
 
@@ -21,8 +23,8 @@ public class LoggingService
         var logEvent = new InputLogEvent
         {
             Timestamp = DateTime.UtcNow,
-            Message = messageData.MessageDetails.ToString()
-        };
+            Message = JsonConvert.SerializeObject(messageData.MessageDetails)
+    };
 
         var request = new PutLogEventsRequest
         {
