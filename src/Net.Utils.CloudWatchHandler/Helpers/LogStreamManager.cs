@@ -9,7 +9,7 @@ public class LogStreamManager
     public virtual string? CurrentLogStreamName { get; private set; }
     public virtual DateTime LastStreamDate { get; private set; }
 
-    public virtual void UpdateStreamData(string newLogStreamName)
+    public virtual void UpdateStreamData(string? newLogStreamName)
     {
         CurrentLogStreamName = newLogStreamName;
         LastStreamDate = DateTime.UtcNow;

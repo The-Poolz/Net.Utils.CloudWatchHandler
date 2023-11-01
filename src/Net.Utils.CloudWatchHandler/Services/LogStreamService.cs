@@ -15,12 +15,10 @@ public class LogStreamService
         _logStreamManager = logStreamManager ?? throw new ArgumentNullException(nameof(logStreamManager));
     }
 
-    public virtual async Task<string?> CreateLogStreamAsync(string? prefix, int streamCreationIntervalInMinutes, string? logGroupName)
+    public virtual async Task<string?> CreateLogStreamAsync(string? prefix, int streamCreationIntervalInMinutes, string? logGroupName, string? logStreamName)
     {
         if (!_logStreamManager.ShouldCreateNewStream(streamCreationIntervalInMinutes))
             return _logStreamManager.CurrentLogStreamName;
-
-        var logStreamName = GenerateLogStreamName(prefix);
 
         await TryCreateLogStreamAsync(new CreateLogStreamRequest(logGroupName, logStreamName));
 
@@ -28,9 +26,6 @@ public class LogStreamService
 
         return logStreamName;
     }
-
-    public static string GenerateLogStreamName(string? prefix)
-        => $"{prefix}-{DateTime.UtcNow:yyyy-MM-ddTHH-mm}";
 
     public virtual async Task TryCreateLogStreamAsync(CreateLogStreamRequest request)
     {

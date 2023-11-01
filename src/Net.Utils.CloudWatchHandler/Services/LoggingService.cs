@@ -23,12 +23,12 @@ public class LoggingService
         {
             Timestamp = DateTime.UtcNow,
             Message = JsonConvert.SerializeObject(logConfiguration.Details)
-    };
+        };
 
         var request = new PutLogEventsRequest
         {
             LogGroupName = logConfiguration.LogGroupName,
-            LogStreamName = await _logStreamService.CreateLogStreamAsync(logConfiguration.Prefix, logConfiguration.StreamCreationIntervalInMinutes, logConfiguration.LogGroupName),
+            LogStreamName = await _logStreamService.CreateLogStreamAsync(logConfiguration.Prefix, logConfiguration.StreamCreationIntervalInMinutes, logConfiguration.LogGroupName, logConfiguration.LogStreamName),
             LogEvents = new List<InputLogEvent> { logEvent },
             SequenceToken = _sequenceToken
         };

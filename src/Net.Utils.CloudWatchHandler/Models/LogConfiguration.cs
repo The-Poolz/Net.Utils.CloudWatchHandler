@@ -24,5 +24,8 @@ public class LogConfiguration
     public string? LogGroupName { get; set; }
 
     [Required]
+    public string? LogStreamName { get; set; }
+
+    [Required]
     public MessageDetails? Details { get; set; }
 }
