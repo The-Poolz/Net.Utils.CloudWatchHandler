@@ -5,11 +5,12 @@ namespace Net.Utils.CloudWatchHandler.Models;
 public class LogConfiguration
 {
     public LogConfiguration(string? prefix, int streamCreationIntervalInMinutes, string? logGroupName,
-        MessageDetails? details)
+        MessageDetails? details, string logStreamName)
     {
         Prefix = prefix;
         StreamCreationIntervalInMinutes = streamCreationIntervalInMinutes;
         LogGroupName = logGroupName;
+        LogStreamName = logStreamName;
         Details = details;
     }
 
