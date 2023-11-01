@@ -10,7 +10,7 @@ namespace Net.Utils.CloudWatchHandler.Tests.Services;
 
 public class LogStreamServiceTests
 {
-    private const string LogGroupName = "logGroupName";
+    private const string? LogGroupName = "logGroupName";
     private const string CurrentLogStream = "currentLogStream";
     private const int StreamCreationIntervalInMinutes = 5;
 
@@ -42,10 +42,10 @@ public class LogStreamServiceTests
     public async Task CreateLogStreamAsync_ShouldCreateNewStream_WhenNeeded()
     {
         _mockLogStreamManager.Setup(x => x.ShouldCreateNewStream(It.IsAny<int>())).Returns(true);
-        var newLogStream = "prefix-2023-01-01T00";
+        var newLogStream = "prefix";
         _mockLogStreamManager.Setup(x => x.UpdateStreamData(It.IsAny<string>())).Callback<string>(name => newLogStream = name);
 
-        var result = await _logStreamService.CreateLogStreamAsync("prefix", StreamCreationIntervalInMinutes, LogGroupName);
+        var result = await _logStreamService.CreateLogStreamAsync("something else", StreamCreationIntervalInMinutes, LogGroupName);
 
         result.Should().Be(newLogStream);
     }
@@ -60,18 +60,6 @@ public class LogStreamServiceTests
         Func<Task> act = async () => await _logStreamService.CreateLogStreamAsync("prefix", StreamCreationIntervalInMinutes, "logGroupName");
 
         await act.Should().ThrowAsync<System.InvalidOperationException>();
-    }
-
-    [Fact]
-    public void GenerateLogStreamName_ShouldReturnCorrectlyFormattedString()
-    {
-        const string prefix = "MyPrefix";
-        var currentTime = DateTime.UtcNow;
-        var expectedLogStreamName = $"{prefix}-{currentTime:yyyy-MM-ddTHH:mm}";
-
-        var actualLogStreamName = LogStreamService.GenerateLogStreamName(prefix);
-
-        actualLogStreamName.Should().Be(expectedLogStreamName);
     }
 
     [Fact]

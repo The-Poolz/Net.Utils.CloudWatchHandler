@@ -4,9 +4,13 @@ namespace Net.Utils.CloudWatchHandler.Models;
 
 public class LogConfiguration
 {
-    public LogConfiguration(string logGroupName)
+    public LogConfiguration(string? prefix, int streamCreationIntervalInMinutes, string? logGroupName,
+        MessageDetails? details)
     {
+        Prefix = prefix;
+        StreamCreationIntervalInMinutes = streamCreationIntervalInMinutes;
         LogGroupName = logGroupName;
+        Details = details;
     }
 
     [Required]
@@ -17,7 +21,7 @@ public class LogConfiguration
     public int StreamCreationIntervalInMinutes { get;  set; }
 
     [Required]
-    public string LogGroupName { get; set; }
+    public string? LogGroupName { get; set; }
 
     [Required]
     public MessageDetails? Details { get; set; }
