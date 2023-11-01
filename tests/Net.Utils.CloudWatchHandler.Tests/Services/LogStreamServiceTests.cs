@@ -33,7 +33,7 @@ public class LogStreamServiceTests
 
         var logStreamService = new LogStreamService(_mockClient.Object, _mockLogStreamManager.Object);
 
-        var result = await logStreamService.CreateLogStreamAsync("prefix", StreamCreationIntervalInMinutes, "logGroupName");
+        var result = await logStreamService.CreateLogStreamAsync("prefix", StreamCreationIntervalInMinutes, "logGroupName", "LambdaSet-2023/11/01/[$LATEST]fc");
 
         result.Should().BeEquivalentTo(CurrentLogStream);
     }
@@ -45,7 +45,7 @@ public class LogStreamServiceTests
         var newLogStream = "prefix";
         _mockLogStreamManager.Setup(x => x.UpdateStreamData(It.IsAny<string>())).Callback<string>(name => newLogStream = name);
 
-        var result = await _logStreamService.CreateLogStreamAsync("something else", StreamCreationIntervalInMinutes, LogGroupName);
+        var result = await _logStreamService.CreateLogStreamAsync("something else", StreamCreationIntervalInMinutes, LogGroupName, "LambdaSet-2023/11/01/[$LATEST]f");
 
         result.Should().Be(newLogStream);
     }
@@ -57,7 +57,7 @@ public class LogStreamServiceTests
         _mockClient.Setup(x => x.CreateLogStreamAsync(It.IsAny<CreateLogStreamRequest>(), default))
             .ThrowsAsync(new System.InvalidOperationException());
 
-        Func<Task> act = async () => await _logStreamService.CreateLogStreamAsync("prefix", StreamCreationIntervalInMinutes, "logGroupName");
+        Func<Task> act = async () => await _logStreamService.CreateLogStreamAsync("prefix", StreamCreationIntervalInMinutes, "logGroupName", "LambdaSet-2023/11/01/[$LATEST]fc");
 
         await act.Should().ThrowAsync<System.InvalidOperationException>();
     }
