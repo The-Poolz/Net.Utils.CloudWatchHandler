@@ -2,37 +2,32 @@
 using Net.Utils.CloudWatchHandler.Models;
 using Microsoft.Extensions.Logging;
 using Xunit;
-using Net.Utils.CloudWatchHandler.Services;
 
 namespace Net.Utils.CloudWatchHandler.Tests.Models;
 
 public class LogConfigurationTests
 {
+    private const string ExpectedPrefix = "prefix";
+    private const int ExpectedInterval = 10;
+    private const string ExpectedLogGroupName = "logGroupName";
+    private readonly string _expectedLogStreamName = $"{ExpectedPrefix}-{DateTime.UtcNow:yyyy-MM-ddTHH-mm}";
+    public MessageDetails ExpectedDetails = new(LogLevel.Error, "message", "LambdaSet");
+
     [Fact]
     public void Constructor_ShouldInitializeAllProperties()
     {
-        const string expectedPrefix = "prefix";
-        const int expectedInterval = 10;
-        const string expectedLogGroupName = "logGroupName";
-        var expectedDetails = new MessageDetails(LogLevel.Error, "message", "LambdaSet");
+        var logConfiguration = new LogConfiguration(ExpectedPrefix, ExpectedInterval, ExpectedLogGroupName, ExpectedDetails, _expectedLogStreamName);
 
-        var logConfiguration = new LogConfiguration(expectedPrefix, expectedInterval, expectedLogGroupName, expectedDetails);
-
-        logConfiguration.Prefix.Should().Be(expectedPrefix);
-        logConfiguration.StreamCreationIntervalInMinutes.Should().Be(expectedInterval);
-        logConfiguration.LogGroupName.Should().Be(expectedLogGroupName);
-        logConfiguration.Details.Should().BeEquivalentTo(expectedDetails);
+        logConfiguration.Prefix.Should().Be(ExpectedPrefix);
+        logConfiguration.StreamCreationIntervalInMinutes.Should().Be(ExpectedInterval);
+        logConfiguration.LogGroupName.Should().Be(ExpectedLogGroupName);
+        logConfiguration.Details.Should().BeEquivalentTo(ExpectedDetails);
     }
 
     [Fact]
     public void Constructor_ShouldCreateNonNullObject()
     {
-        const string expectedPrefix = "prefix";
-        const int expectedInterval = 10;
-        const string expectedLogGroupName = "logGroupName";
-        var expectedDetails = new MessageDetails(LogLevel.Error, "message", "LambdaSet");
-
-        var logConfiguration = new LogConfiguration(expectedPrefix, expectedInterval, expectedLogGroupName, expectedDetails);
+        var logConfiguration = new LogConfiguration(ExpectedPrefix, ExpectedInterval, ExpectedLogGroupName, ExpectedDetails, _expectedLogStreamName);
 
         logConfiguration.Should().NotBeNull();
     }
