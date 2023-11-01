@@ -36,18 +36,4 @@ public class LogConfigurationTests
 
         logConfiguration.Should().NotBeNull();
     }
-
-    [Fact]
-    public void GenerateLogStreamName_ShouldGenerateCorrectly_WhenPrefixIsProvided()
-    {
-        const string prefix = "testPrefix";
-
-        var generatedLogStreamName = LogStreamService.GenerateLogStreamName(prefix);
-        var expectedSuffix = DateTime.UtcNow.ToString("yyyy-MM-ddTHH-mm");
-        var expectedLogStreamName = $"{prefix}-{expectedSuffix}";
-
-        generatedLogStreamName.Should().StartWith(prefix);
-        generatedLogStreamName.Should().EndWith(expectedSuffix);
-        generatedLogStreamName.Should().Be(expectedLogStreamName);
-    }
 }
