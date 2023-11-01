@@ -64,4 +64,16 @@ public class LogStreamManagerTests
         lastStreamDate.Should().BeOnOrAfter(beforeUpdate);
         lastStreamDate.Should().BeOnOrBefore(DateTime.UtcNow);
     }
+
+    [Fact]
+    public void ShouldCalculateTimeSinceLastStreamInMinutes()
+    {
+        var lastStreamDate = new DateTime(2023, 10, 25, 12, 0, 0, DateTimeKind.Utc);
+        var currentUtcDate = new DateTime(2023, 10, 25, 12, 30, 0, DateTimeKind.Utc);
+
+        var timeSpan = currentUtcDate - lastStreamDate;
+        var timeSinceLastStreamInMinutes = (int)Math.Round(timeSpan.TotalMinutes);
+
+        timeSinceLastStreamInMinutes.Should().Be(30);
+    }
 }

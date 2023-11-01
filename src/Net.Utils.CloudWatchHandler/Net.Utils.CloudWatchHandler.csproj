@@ -41,7 +41,6 @@ Please refer to our documentation for detailed usage instructions and best pract
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="AWS.Logger.AspNetCore" Version="3.4.1" />
     <PackageReference Include="AWSSDK.CloudWatchLogs" Version="3.7.201.10" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
