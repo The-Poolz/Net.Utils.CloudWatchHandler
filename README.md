@@ -1,8 +1,7 @@
-# Net.Utils.CloudWatchHandler
+## Net.Utils.CloudWatchHandler
 CloudWatch Handler
 
 [![CodeFactor](https://www.codefactor.io/repository/github/the-poolz/net.utils.cloudwatchhandler/badge)](https://www.codefactor.io/repository/github/the-poolz/net.utils.cloudwatchhandler)
-
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=The-Poolz_Net.Utils.CloudWatchHandler&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=The-Poolz_Net.Utils.CloudWatchHandler)
 
@@ -11,9 +10,9 @@ CloudWatch Handler
 ## Table of Contents
 - [Installation](#installation)
 - [Usage](#usage)
+  - [Example with LoggingConfig](#example-with-loggingconfig)
 - [Features](#features)
 - [Contribution](#contribution)
-`Net.Utils.CloudWatchHandler` is a .NET utility library designed to streamline interactions with AWS CloudWatch, making it easier to create and manage log streams and messages.
 
 ## Installation
 
@@ -24,22 +23,55 @@ Install-Package Net.Utils.CloudWatchHandler
 ```
 
 ## Usage
-How to use your library/package. Include basic code examples.
+Below is a basic code example showcasing how to use the library's `LoggingService`.
 
 ```csharp
-using Net.Utils.CloudWatchHandler;
+using Net.Utils.CloudWatchHandler.Services;
 
-// Initialize the service
-var logStreamService = new LogStreamService(client, LogGroupName);
-var loggingService = new LoggingService(client, LogGroupName, logStreamService);
+// Initialize the LoggingService
+var loggingService = new LoggingService(cloudWatchClient, logStreamService);
 
-// Log the message in JSON format
-await loggingService.LogMessageAsync(jsonData);
+// Log the message
+await loggingService.LogMessageAsync(logConfiguration);
 ```
-Note: Before calling LogMessageAsync, ensure that jsonData is neither null nor empty. The library expects a valid JSON-formatted string.
+Comprehensive Example
+The following example demonstrates how to implement a custom `LoggingConfig` class, and then use it to call `LogMessageAsync` from `LoggingService`.
+
+```csharp
+using Amazon.CloudWatchLogs;
+using Microsoft.Extensions.Logging;
+
+namespace AWSLambda
+{
+    public class LoggingConfig
+    {
+        // Singleton Instance
+        private static readonly Lazy<LoggingConfig> _instance = new Lazy<LoggingConfig>(() => new LoggingConfig());
+        public static LoggingConfig Instance => _instance.Value;
+
+        public LoggingService LoggingService { get; }
+        // ... Other properties ...
+
+        private LoggingConfig()
+        {
+            IAmazonCloudWatchLogs client = new AmazonCloudWatchLogsClient();
+            // Initialize LoggingService and other properties
+        }
+
+        public LogConfiguration CreateLogConfiguration(LogLevel errorLevel, string message, string applicationName)
+        {
+            // Create and return a new LogConfiguration object
+        }
+    }
+}
+
+// Usage
+await LoggingConfig.Instance.LoggingService.LogMessageAsync(
+    LoggingConfig.Instance.CreateLogConfiguration(LogLevel.Error, "Your Error Message", "Your Application Name")
+);
+```
 
 ## Features
-List the main features of your library/package.
 
 - Easily create and manage AWS CloudWatch log streams.
 - Optimized to create a new log stream only once per day.

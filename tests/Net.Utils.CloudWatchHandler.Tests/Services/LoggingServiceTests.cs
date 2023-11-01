@@ -40,7 +40,6 @@ public class LoggingServiceTests
         _mockLogStreamService.Setup(m => m.CreateLogStreamAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync("logStreamName");
 
-
         await _loggingService.Invoking(y => y.LogMessageAsync(_logConfiguration))
             .Should().NotThrowAsync<InvalidSequenceTokenException>();
 
@@ -52,7 +51,6 @@ public class LoggingServiceTests
     {
         _mockLogStreamService.Setup(m => m.CreateLogStreamAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync("logStreamName");
-
 
         _mockCloudWatchClient.Setup(x => x.PutLogEventsAsync(It.IsAny<PutLogEventsRequest>(), default))
             .ReturnsAsync(new PutLogEventsResponse { NextSequenceToken = "NewToken" });
