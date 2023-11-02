@@ -1,35 +1,27 @@
 ﻿using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
-using Net.Utils.CloudWatchHandler.Helpers;
 
 namespace Net.Utils.CloudWatchHandler.Services;
 
 public class LogStreamService
 {
-    private readonly IAmazonCloudWatchLogs _client;
-    private readonly LogStreamManager _logStreamManager;
+    private readonly IAmazonCloudWatchLogs _cloudWatchClient;
 
-    public LogStreamService(IAmazonCloudWatchLogs client, LogStreamManager logStreamManager)
+    public LogStreamService(IAmazonCloudWatchLogs client)
     {
-        _client = client ?? throw new ArgumentNullException(nameof(client));
-        _logStreamManager = logStreamManager ?? throw new ArgumentNullException(nameof(logStreamManager));
+        _cloudWatchClient = client ?? throw new ArgumentNullException(nameof(client));
     }
 
-    public virtual async Task<string?> CreateLogStreamAsync(string? prefix, int streamCreationIntervalInMinutes, string? logGroupName, string? logStreamName)
+    public virtual async Task<string?> CreateLogStreamAsync(string logGroupName, string logStreamName)
     {
-        if (!_logStreamManager.ShouldCreateNewStream(streamCreationIntervalInMinutes))
-            return _logStreamManager.CurrentLogStreamName;
-
         await TryCreateLogStreamAsync(new CreateLogStreamRequest(logGroupName, logStreamName));
-
-        _logStreamManager.UpdateStreamData(logStreamName);
 
         return logStreamName;
     }
 
     public virtual async Task TryCreateLogStreamAsync(CreateLogStreamRequest request)
     {
-        await _client.CreateLogStreamAsync(request)
+        await _cloudWatchClient.CreateLogStreamAsync(request)
             .ContinueWith(task =>
             {
                 if (task.IsFaulted && task.Exception?.InnerExceptions.FirstOrDefault() is { } exception && !(exception is ResourceAlreadyExistsException))
