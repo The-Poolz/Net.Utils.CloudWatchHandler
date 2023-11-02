@@ -4,7 +4,6 @@ using Amazon.CloudWatchLogs.Model;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Net.Utils.CloudWatchHandler.Helpers;
 using Net.Utils.CloudWatchHandler.Models;
 using Net.Utils.CloudWatchHandler.Services;
 using Newtonsoft.Json;
@@ -22,11 +21,10 @@ public class LoggingServiceTests
     public LoggingServiceTests()
     {
         var messageDetails = new MessageDetails(LogLevel.Error, "message", "LambdaSet");
-        _logConfiguration = new LogConfiguration("prefix", 5, "logGroupName", messageDetails, "prefix-2023/11/01/[$LATEST]fc");
+        _logConfiguration = new LogConfiguration("logGroupName", messageDetails, "prefix-2023/11/01/[$LATEST]fc");
 
         _mockCloudWatchClient = new Mock<IAmazonCloudWatchLogs>();
-        var mockLogStreamManager = new Mock<LogStreamManager>();
-        _mockLogStreamService = new Mock<LogStreamService>(_mockCloudWatchClient.Object, mockLogStreamManager.Object);
+        _mockLogStreamService = new Mock<LogStreamService>(_mockCloudWatchClient.Object);
         _loggingService = new LoggingService(_mockCloudWatchClient.Object, _mockLogStreamService.Object);
 
         _mockCloudWatchClient.SetupSequence(x => x.PutLogEventsAsync(It.IsAny<PutLogEventsRequest>(), default))
@@ -37,7 +35,7 @@ public class LoggingServiceTests
     [Fact]
     public async Task LogMessageAsync_ShouldRetryAndSucceed_WhenInvalidToken()
     {
-        _mockLogStreamService.Setup(m => m.CreateLogStreamAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()))
+        _mockLogStreamService.Setup(m => m.CreateLogStreamAsync(It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync("logStreamName");
 
         await _loggingService.Invoking(y => y.LogMessageAsync(_logConfiguration))
@@ -49,7 +47,7 @@ public class LoggingServiceTests
     [Fact]
     public async Task LogMessageAsync_ShouldUpdate_SequenceToken()
     {
-        _mockLogStreamService.Setup(m => m.CreateLogStreamAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()))
+        _mockLogStreamService.Setup(m => m.CreateLogStreamAsync(It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync("logStreamName");
 
         _mockCloudWatchClient.Setup(x => x.PutLogEventsAsync(It.IsAny<PutLogEventsRequest>(), default))
@@ -64,7 +62,7 @@ public class LoggingServiceTests
     [Fact]
     public async Task LogMessageAsync_ShouldLogSuccessfully()
     {
-        _mockLogStreamService.Setup(m => m.CreateLogStreamAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()))
+        _mockLogStreamService.Setup(m => m.CreateLogStreamAsync(It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync("logStreamName");
 
         await _loggingService.Invoking(y => y.LogMessageAsync(_logConfiguration))
@@ -84,7 +82,7 @@ public class LoggingServiceTests
     [Fact]
     public async Task LogMessageAsync_SetsLogGroupNameAndLogStreamNameCorrectly()
     {
-        _mockLogStreamService.Setup(m => m.CreateLogStreamAsync(It.IsAny<string>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<string>()))
+        _mockLogStreamService.Setup(m => m.CreateLogStreamAsync(It.IsAny<string>(), It.IsAny<string>()))
             .ReturnsAsync("logStreamName");
 
         await _loggingService.LogMessageAsync(_logConfiguration);
