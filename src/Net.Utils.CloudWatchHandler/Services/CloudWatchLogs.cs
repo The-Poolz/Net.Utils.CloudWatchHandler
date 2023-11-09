@@ -7,20 +7,17 @@ namespace Net.Utils.CloudWatchHandler.Services;
 
 public class CloudWatchLogs : IDisposable, IAsyncDisposable
 {
+    public IAmazonCloudWatchLogs Client { get; }
     public Serilog.Core.Logger Logger { get; }
 
-    private CloudWatchLogs(Serilog.Core.Logger logger)
+    public CloudWatchLogs(Serilog.Core.Logger logger, IAmazonCloudWatchLogs client)
     {
+        Client = client;
         Logger = logger;
     }
 
-    public static CloudWatchLogs Create(LogConfig logConfig)
+    public static CloudWatchLogs Create(LogConfig logConfig, IAmazonCloudWatchLogs client)
     {
-        var client = new AmazonCloudWatchLogsClient(new AmazonCloudWatchLogsConfig
-        {
-            RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(logConfig.Region)
-        });
-
         var logger = new LoggerConfiguration()
             .MinimumLevel.Is(logConfig.RestrictedToMinimumLevel)
             .WriteTo.AmazonCloudWatch(
@@ -32,10 +29,10 @@ public class CloudWatchLogs : IDisposable, IAsyncDisposable
                 cloudWatchClient: client)
             .CreateLogger();
 
-        return new CloudWatchLogs(logger);
+        return new CloudWatchLogs(logger, client);
     }
 
-    public void Dispose() => Logger?.Dispose();
+    public void Dispose() => Logger.Dispose();
 
     public async ValueTask DisposeAsync() => await Logger.DisposeAsync();
 }
