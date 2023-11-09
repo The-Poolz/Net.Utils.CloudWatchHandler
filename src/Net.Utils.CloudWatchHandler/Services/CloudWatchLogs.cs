@@ -30,7 +30,9 @@ public class CloudWatchLogs : IDisposable, IAsyncDisposable
                 cloudWatchClient: client
             ))
             .Filter.ByExcluding(logEvent =>
-                logEvent.Properties.Any(prop => prop.Value.ToString().Contains("sensitive-data")))
+                logEvent.Properties.Any(prop =>
+                    new[] { "password", "apikey", "token", "secret" }.Any(term =>
+                        prop.Value.ToString().IndexOf(term, StringComparison.OrdinalIgnoreCase) >= 0)))
             .CreateLogger();
 
         return new CloudWatchLogs(logger, client);
