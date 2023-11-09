@@ -38,4 +38,3 @@ namespace Net.Utils.CloudWatchHandler.Models
         public bool AppendUniqueInstanceGuid { get; set; } = true;
     }
 }
-
