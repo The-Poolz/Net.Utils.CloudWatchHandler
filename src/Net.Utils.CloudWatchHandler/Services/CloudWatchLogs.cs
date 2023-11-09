@@ -19,20 +19,35 @@ public class CloudWatchLogs : IDisposable, IAsyncDisposable
     public static CloudWatchLogs Create(LogConfig logConfig, IAmazonCloudWatchLogs client)
     {
         var logger = new LoggerConfiguration()
-            .MinimumLevel.Is(logConfig.RestrictedToMinimumLevel)
-            .WriteTo.AmazonCloudWatch(
+            .Enrich.FromLogContext()
+            .WriteTo.Console()
+            .WriteTo.Async(a => a.AmazonCloudWatch(
                 logGroup: logConfig.LogGroup,
                 logStreamPrefix: logConfig.LogStreamNamePrefix,
                 restrictedToMinimumLevel: logConfig.RestrictedToMinimumLevel,
                 appendHostName: logConfig.AppendHostName,
                 appendUniqueInstanceGuid: logConfig.AppendUniqueInstanceGuid,
-                cloudWatchClient: client)
+                cloudWatchClient: client
+            ))
+            .Filter.ByExcluding(logEvent =>
+                logEvent.Properties.Any(prop => prop.Value.ToString().Contains("sensitive-data")))
             .CreateLogger();
 
         return new CloudWatchLogs(logger, client);
     }
 
-    public void Dispose() => Logger.Dispose();
+    public void Dispose()
+    {
+        Logger.Dispose();
+        GC.SuppressFinalize(this);
+    }
 
-    public async ValueTask DisposeAsync() => await Logger.DisposeAsync();
+    public async ValueTask DisposeAsync()
+    {
+        if (Logger is IAsyncDisposable asyncDisposable)
+            await asyncDisposable.DisposeAsync();
+        else
+            Logger.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }
