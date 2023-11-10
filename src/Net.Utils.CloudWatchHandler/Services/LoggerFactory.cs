@@ -13,6 +13,7 @@ public static class LoggerFactory
         var loggerConfiguration = new LoggerConfiguration()
             .MinimumLevel.Is(logConfig.RestrictedToMinimumLevel)
             .Enrich.FromLogContext()
+            .WriteTo.Console()
             .WriteTo.AmazonCloudWatch(
                 logGroup: logConfig.LogGroup,
                 logStreamPrefix: logConfig.LogStreamNamePrefix,
