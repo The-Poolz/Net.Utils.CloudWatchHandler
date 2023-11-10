@@ -1,5 +1,7 @@
 ﻿using Amazon.CloudWatchLogs;
 using Net.Utils.CloudWatchHandler.Models;
+using Serilog;
+using Serilog.Sinks.AwsCloudWatch;
 
 namespace Net.Utils.CloudWatchHandler.Services;
 
@@ -16,13 +18,26 @@ public class CloudWatchLogs : IDisposable, IAsyncDisposable
 
     public static CloudWatchLogs Create(LogConfig logConfig, IAmazonCloudWatchLogs client)
     {
-        var logger = SerilogLogging.CreateLogger(logConfig, client);
+        var logger = new LoggerConfiguration()
+            .MinimumLevel.Is(logConfig.RestrictedToMinimumLevel)
+            .Enrich.FromLogContext()
+            .WriteTo.Console()
+            .WriteTo.Async(a => a.AmazonCloudWatch(
+                logGroup: logConfig.LogGroup,
+                logStreamPrefix: logConfig.LogStreamNamePrefix,
+                restrictedToMinimumLevel: logConfig.RestrictedToMinimumLevel,
+                appendHostName: logConfig.AppendHostName,
+                appendUniqueInstanceGuid: logConfig.AppendUniqueInstanceGuid,
+                cloudWatchClient: client
+            ))
+            .CreateLogger();
+
         return new CloudWatchLogs(logger, client);
     }
 
     public void Dispose()
     {
-        Logger?.Dispose();
+        Logger.Dispose();
         GC.SuppressFinalize(this);
     }
 
@@ -31,7 +46,7 @@ public class CloudWatchLogs : IDisposable, IAsyncDisposable
         if (Logger is IAsyncDisposable asyncDisposable)
             await asyncDisposable.DisposeAsync();
         else
-            Logger.Dispose();
+            Dispose();
         GC.SuppressFinalize(this);
     }
 }
