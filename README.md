@@ -1,19 +1,19 @@
-# Net.Utils.CloudWatchHandler
-CloudWatch Handler
+## Net.Utils.CloudWatchHandler
+CloudWatch Handler for .NET
 
 [![CodeFactor](https://www.codefactor.io/repository/github/the-poolz/net.utils.cloudwatchhandler/badge)](https://www.codefactor.io/repository/github/the-poolz/net.utils.cloudwatchhandler)
 
-
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=The-Poolz_Net.Utils.CloudWatchHandler&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=The-Poolz_Net.Utils.CloudWatchHandler)
 
-`Net.Utils.CloudWatchHandler` is a .NET utility library designed to streamline interactions with AWS CloudWatch. It simplifies the process of creating and managing log streams and messages.
+`Net.Utils.CloudWatchHandler`  is a .NET utility library that simplifies the process of creating and managing AWS CloudWatch log streams and messages.
 
 ## Table of Contents
 - [Installation](#installation)
 - [Usage](#usage)
 - [Features](#features)
 - [Contribution](#contribution)
-`Net.Utils.CloudWatchHandler` is a .NET utility library designed to streamline interactions with AWS CloudWatch, making it easier to create and manage log streams and messages.
+- [License](#License)
+
 
 ## Installation
 
@@ -24,28 +24,40 @@ Install-Package Net.Utils.CloudWatchHandler
 ```
 
 ## Usage
-How to use your library/package. Include basic code examples.
+Below is a basic example showcasing how to use the `CloudWatchLogs` service for logging messages.
 
 ```csharp
-using Net.Utils.CloudWatchHandler;
+using Net.Utils.CloudWatchHandler.Services;
+using Amazon.CloudWatchLogs;
 
-// Initialize the service
-var logStreamService = new LogStreamService(client, LogGroupName);
-var loggingService = new LoggingService(client, LogGroupName, logStreamService);
+// Configure AWS CloudWatch client
+IAmazonCloudWatchLogs cloudWatchClient = new AmazonCloudWatchLogsClient();
 
-// Log the message in JSON format
-await loggingService.LogMessageAsync(jsonData);
+// Configure logging
+var logConfig = new LogConfig
+{
+    LogGroup = "YourLogGroup",
+    LogStreamNamePrefix = "YourLogStreamPrefix",
+    Region = "us-east-1",
+    RestrictedToMinimumLevel = Serilog.Events.LogEventLevel.Information,
+    AppendHostName = true,
+    AppendUniqueInstanceGuid = true
+};
+
+// Create CloudWatchLogs instance
+var cloudWatchLogs = CloudWatchLogs.Create(logConfig, cloudWatchClient);
+
+// Log a message
+cloudWatchLogs.Logger.Information("This is a test log message.");
 ```
-Note: Before calling LogMessageAsync, ensure that jsonData is neither null nor empty. The library expects a valid JSON-formatted string.
 
 ## Features
-List the main features of your library/package.
 
-- Easily create and manage AWS CloudWatch log streams.
-- Optimized to create a new log stream only once per day.
-- Appends messages to the existing log stream within the same day.
-- Simplified logging service to send messages to CloudWatch.
-- Customizable message formatter utility.
+- Simplifies creation and management of AWS CloudWatch log streams.
+- Creates a new log stream once per day, optimizing resource usage.
+- Appends messages to the same log stream within a single day.
+- Provides a simplified interface for sending messages to CloudWatch.
+- Includes a customizable message formatter.
 
 ## Contribution
 
